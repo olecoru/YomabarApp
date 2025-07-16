@@ -49,15 +49,35 @@ class UserRole(str, Enum):
     BARTENDER = "bartender"
     ADMINISTRATOR = "administrator"
 
-class MenuCategory(str, Enum):
-    APPETIZERS = "appetizers"
-    MAIN_DISHES = "main_dishes"
-    DESSERTS = "desserts"
-    BEVERAGES = "beverages"
-
 class ItemType(str, Enum):
     FOOD = "food"
     DRINK = "drink"
+
+# Category Model (now dynamic)
+class Category(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    display_name: str
+    emoji: str
+    description: Optional[str] = None
+    sort_order: int = 0
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class CategoryCreate(BaseModel):
+    name: str
+    display_name: str
+    emoji: str
+    description: Optional[str] = None
+    sort_order: int = 0
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    display_name: Optional[str] = None
+    emoji: Optional[str] = None
+    description: Optional[str] = None
+    sort_order: Optional[int] = None
+    is_active: Optional[bool] = None
 
 # User Models
 class User(BaseModel):
@@ -66,14 +86,28 @@ class User(BaseModel):
     password_hash: str
     role: UserRole
     full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class UserCreate(BaseModel):
     username: str
     password: str
     role: UserRole
     full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    role: Optional[UserRole] = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class UserLogin(BaseModel):
     username: str
@@ -86,34 +120,62 @@ class Token(BaseModel):
     role: UserRole
     full_name: str
 
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    role: UserRole
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
 # Menu Models
 class MenuItem(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     description: str
     price: float
-    category: MenuCategory
+    category_id: str  # Now references dynamic category
     item_type: ItemType
     available: bool = True
     on_stop_list: bool = False
     image_url: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class MenuItemCreate(BaseModel):
     name: str
     description: str
     price: float
-    category: MenuCategory
+    category_id: str
     item_type: ItemType
 
 class MenuItemUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
-    category: Optional[MenuCategory] = None
+    category_id: Optional[str] = None
     item_type: Optional[ItemType] = None
     available: Optional[bool] = None
     on_stop_list: Optional[bool] = None
+
+class MenuItemWithCategory(BaseModel):
+    id: str
+    name: str
+    description: str
+    price: float
+    category_id: str
+    category_name: str
+    category_display_name: str
+    category_emoji: str
+    item_type: ItemType
+    available: bool
+    on_stop_list: bool
+    image_url: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
 # Order Models
 class OrderItem(BaseModel):
@@ -205,15 +267,34 @@ def require_role(allowed_roles: List[UserRole]):
         return current_user
     return role_checker
 
-# Initialize default users and menu data
+# Initialize default data
 async def init_default_data():
-    """Initialize default users and menu data"""
+    """Initialize default categories, users and menu data"""
+    
+    # Create default categories if they don't exist
+    default_categories = [
+        {"name": "appetizers", "display_name": "Appetizers", "emoji": "🥗", "description": "Starters and small plates", "sort_order": 1},
+        {"name": "main_dishes", "display_name": "Main Dishes", "emoji": "🍽️", "description": "Main course items", "sort_order": 2},
+        {"name": "desserts", "display_name": "Desserts", "emoji": "🍰", "description": "Sweet treats and desserts", "sort_order": 3},
+        {"name": "beverages", "display_name": "Beverages", "emoji": "🥤", "description": "Drinks and beverages", "sort_order": 4}
+    ]
+    
+    category_mapping = {}
+    for cat_data in default_categories:
+        existing_cat = await db.categories.find_one({"name": cat_data["name"]})
+        if not existing_cat:
+            category = Category(**cat_data)
+            await db.categories.insert_one(category.dict())
+            category_mapping[cat_data["name"]] = category.id
+        else:
+            category_mapping[cat_data["name"]] = existing_cat["id"]
+    
     # Create default users if they don't exist
     default_users = [
-        {"username": "waitress1", "password": "password123", "role": UserRole.WAITRESS, "full_name": "Sarah Johnson"},
-        {"username": "kitchen1", "password": "password123", "role": UserRole.KITCHEN, "full_name": "Chef Mike"},
-        {"username": "bartender1", "password": "password123", "role": UserRole.BARTENDER, "full_name": "Tom Wilson"},
-        {"username": "admin1", "password": "password123", "role": UserRole.ADMINISTRATOR, "full_name": "Manager Lisa"}
+        {"username": "waitress1", "password": "password123", "role": UserRole.WAITRESS, "full_name": "Sarah Johnson", "email": "sarah@restaurant.com"},
+        {"username": "kitchen1", "password": "password123", "role": UserRole.KITCHEN, "full_name": "Chef Mike", "email": "chef@restaurant.com"},
+        {"username": "bartender1", "password": "password123", "role": UserRole.BARTENDER, "full_name": "Tom Wilson", "email": "tom@restaurant.com"},
+        {"username": "admin1", "password": "password123", "role": UserRole.ADMINISTRATOR, "full_name": "Manager Lisa", "email": "admin@restaurant.com"}
     ]
     
     for user_data in default_users:
@@ -223,7 +304,8 @@ async def init_default_data():
                 username=user_data["username"],
                 password_hash=get_password_hash(user_data["password"]),
                 role=user_data["role"],
-                full_name=user_data["full_name"]
+                full_name=user_data["full_name"],
+                email=user_data["email"]
             )
             await db.users.insert_one(user.dict())
     
@@ -231,107 +313,30 @@ async def init_default_data():
     count = await db.menu_items.count_documents({})
     if count == 0:
         sample_menu = [
-            # Appetizers (Food)
-            MenuItem(
-                name="Caesar Salad",
-                description="Fresh romaine lettuce, parmesan cheese, croutons, caesar dressing",
-                price=12.99,
-                category=MenuCategory.APPETIZERS,
-                item_type=ItemType.FOOD
-            ),
-            MenuItem(
-                name="Buffalo Wings",
-                description="Crispy chicken wings with buffalo sauce and blue cheese dip",
-                price=14.99,
-                category=MenuCategory.APPETIZERS,
-                item_type=ItemType.FOOD
-            ),
-            MenuItem(
-                name="Mozzarella Sticks",
-                description="Golden fried mozzarella with marinara sauce",
-                price=9.99,
-                category=MenuCategory.APPETIZERS,
-                item_type=ItemType.FOOD
-            ),
+            # Appetizers
+            {"name": "Caesar Salad", "description": "Fresh romaine lettuce, parmesan cheese, croutons, caesar dressing", "price": 12.99, "category_id": category_mapping["appetizers"], "item_type": ItemType.FOOD},
+            {"name": "Buffalo Wings", "description": "Crispy chicken wings with buffalo sauce and blue cheese dip", "price": 14.99, "category_id": category_mapping["appetizers"], "item_type": ItemType.FOOD},
+            {"name": "Mozzarella Sticks", "description": "Golden fried mozzarella with marinara sauce", "price": 9.99, "category_id": category_mapping["appetizers"], "item_type": ItemType.FOOD},
             
-            # Main Dishes (Food)
-            MenuItem(
-                name="Grilled Salmon",
-                description="Fresh Atlantic salmon with lemon herb butter, rice pilaf, and vegetables",
-                price=22.99,
-                category=MenuCategory.MAIN_DISHES,
-                item_type=ItemType.FOOD
-            ),
-            MenuItem(
-                name="Chicken Parmesan",
-                description="Breaded chicken breast with marinara sauce and mozzarella, served with pasta",
-                price=18.99,
-                category=MenuCategory.MAIN_DISHES,
-                item_type=ItemType.FOOD
-            ),
-            MenuItem(
-                name="Beef Burger",
-                description="Juicy beef patty with lettuce, tomato, cheese, and fries",
-                price=15.99,
-                category=MenuCategory.MAIN_DISHES,
-                item_type=ItemType.FOOD
-            ),
+            # Main Dishes
+            {"name": "Grilled Salmon", "description": "Fresh Atlantic salmon with lemon herb butter, rice pilaf, and vegetables", "price": 22.99, "category_id": category_mapping["main_dishes"], "item_type": ItemType.FOOD},
+            {"name": "Chicken Parmesan", "description": "Breaded chicken breast with marinara sauce and mozzarella, served with pasta", "price": 18.99, "category_id": category_mapping["main_dishes"], "item_type": ItemType.FOOD},
+            {"name": "Beef Burger", "description": "Juicy beef patty with lettuce, tomato, cheese, and fries", "price": 15.99, "category_id": category_mapping["main_dishes"], "item_type": ItemType.FOOD},
             
-            # Desserts (Food)
-            MenuItem(
-                name="Chocolate Cake",
-                description="Rich chocolate layer cake with chocolate frosting",
-                price=7.99,
-                category=MenuCategory.DESSERTS,
-                item_type=ItemType.FOOD
-            ),
-            MenuItem(
-                name="Cheesecake",
-                description="Classic New York style cheesecake with berry compote",
-                price=8.99,
-                category=MenuCategory.DESSERTS,
-                item_type=ItemType.FOOD
-            ),
+            # Desserts
+            {"name": "Chocolate Cake", "description": "Rich chocolate layer cake with chocolate frosting", "price": 7.99, "category_id": category_mapping["desserts"], "item_type": ItemType.FOOD},
+            {"name": "Cheesecake", "description": "Classic New York style cheesecake with berry compote", "price": 8.99, "category_id": category_mapping["desserts"], "item_type": ItemType.FOOD},
             
-            # Beverages (Drink)
-            MenuItem(
-                name="Coca Cola",
-                description="Classic cola soft drink",
-                price=2.99,
-                category=MenuCategory.BEVERAGES,
-                item_type=ItemType.DRINK
-            ),
-            MenuItem(
-                name="Fresh Orange Juice",
-                description="Freshly squeezed orange juice",
-                price=4.99,
-                category=MenuCategory.BEVERAGES,
-                item_type=ItemType.DRINK
-            ),
-            MenuItem(
-                name="Coffee",
-                description="Freshly brewed coffee",
-                price=3.99,
-                category=MenuCategory.BEVERAGES,
-                item_type=ItemType.DRINK
-            ),
-            MenuItem(
-                name="Beer",
-                description="Cold draft beer",
-                price=5.99,
-                category=MenuCategory.BEVERAGES,
-                item_type=ItemType.DRINK
-            ),
-            MenuItem(
-                name="Wine Glass",
-                description="Red or white wine by the glass",
-                price=7.99,
-                category=MenuCategory.BEVERAGES,
-                item_type=ItemType.DRINK
-            )
+            # Beverages
+            {"name": "Coca Cola", "description": "Classic cola soft drink", "price": 2.99, "category_id": category_mapping["beverages"], "item_type": ItemType.DRINK},
+            {"name": "Fresh Orange Juice", "description": "Freshly squeezed orange juice", "price": 4.99, "category_id": category_mapping["beverages"], "item_type": ItemType.DRINK},
+            {"name": "Coffee", "description": "Freshly brewed coffee", "price": 3.99, "category_id": category_mapping["beverages"], "item_type": ItemType.DRINK},
+            {"name": "Beer", "description": "Cold draft beer", "price": 5.99, "category_id": category_mapping["beverages"], "item_type": ItemType.DRINK},
+            {"name": "Wine Glass", "description": "Red or white wine by the glass", "price": 7.99, "category_id": category_mapping["beverages"], "item_type": ItemType.DRINK}
         ]
         
-        for item in sample_menu:
+        for item_data in sample_menu:
+            item = MenuItem(**item_data)
             await db.menu_items.insert_one(item.dict())
 
 # Authentication endpoints
@@ -361,47 +366,226 @@ async def login(user_credentials: UserLogin):
         full_name=user["full_name"]
     )
 
-@api_router.post("/auth/register", response_model=User)
-async def register(user_data: UserCreate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
-    """Register new user (admin only)"""
+@api_router.get("/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current user info"""
+    return UserResponse(**current_user.dict())
+
+# Category endpoints
+@api_router.get("/categories", response_model=List[Category])
+async def get_categories(current_user: User = Depends(get_current_user)):
+    """Get all categories"""
+    categories = await db.categories.find({"is_active": True}).sort("sort_order").to_list(1000)
+    return [Category(**cat) for cat in categories]
+
+@api_router.get("/categories/all", response_model=List[Category])
+async def get_all_categories(current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Get all categories including inactive ones (admin only)"""
+    categories = await db.categories.find().sort("sort_order").to_list(1000)
+    return [Category(**cat) for cat in categories]
+
+@api_router.post("/categories", response_model=Category)
+async def create_category(category_data: CategoryCreate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Create new category (admin only)"""
+    # Check if category name already exists
+    existing_cat = await db.categories.find_one({"name": category_data.name})
+    if existing_cat:
+        raise HTTPException(status_code=400, detail="Category name already exists")
+    
+    category = Category(**category_data.dict())
+    await db.categories.insert_one(category.dict())
+    return category
+
+@api_router.put("/categories/{category_id}", response_model=Category)
+async def update_category(category_id: str, category_data: CategoryUpdate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Update category (admin only)"""
+    category = await db.categories.find_one({"id": category_id})
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Check if new name already exists (if name is being updated)
+    if category_data.name and category_data.name != category["name"]:
+        existing_cat = await db.categories.find_one({"name": category_data.name})
+        if existing_cat:
+            raise HTTPException(status_code=400, detail="Category name already exists")
+    
+    update_data = {k: v for k, v in category_data.dict().items() if v is not None}
+    if update_data:
+        await db.categories.update_one({"id": category_id}, {"$set": update_data})
+    
+    updated_category = await db.categories.find_one({"id": category_id})
+    return Category(**updated_category)
+
+@api_router.delete("/categories/{category_id}")
+async def delete_category(category_id: str, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Delete category (admin only)"""
+    # Check if category has associated menu items
+    menu_items_count = await db.menu_items.count_documents({"category_id": category_id})
+    if menu_items_count > 0:
+        raise HTTPException(status_code=400, detail="Cannot delete category with associated menu items")
+    
+    result = await db.categories.delete_one({"id": category_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return {"message": "Category deleted successfully"}
+
+# User Management endpoints
+@api_router.get("/users", response_model=List[UserResponse])
+async def get_users(current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Get all users (admin only)"""
+    users = await db.users.find().sort("created_at", -1).to_list(1000)
+    return [UserResponse(**user) for user in users]
+
+@api_router.post("/users", response_model=UserResponse)
+async def create_user(user_data: UserCreate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Create new user (admin only)"""
     existing_user = await db.users.find_one({"username": user_data.username})
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
-        )
+        raise HTTPException(status_code=400, detail="Username already exists")
     
     user = User(
         username=user_data.username,
         password_hash=get_password_hash(user_data.password),
         role=user_data.role,
-        full_name=user_data.full_name
+        full_name=user_data.full_name,
+        email=user_data.email,
+        phone=user_data.phone
     )
     
     await db.users.insert_one(user.dict())
-    return user
+    return UserResponse(**user.dict())
 
-@api_router.get("/auth/me", response_model=User)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
-    """Get current user info"""
-    return current_user
+@api_router.get("/users/{user_id}", response_model=UserResponse)
+async def get_user(user_id: str, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Get specific user (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserResponse(**user)
+
+@api_router.put("/users/{user_id}", response_model=UserResponse)
+async def update_user(user_id: str, user_data: UserUpdate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Update user (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if new username already exists (if username is being updated)
+    if user_data.username and user_data.username != user["username"]:
+        existing_user = await db.users.find_one({"username": user_data.username})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+    
+    update_data = {k: v for k, v in user_data.dict().items() if v is not None}
+    
+    # Hash password if provided
+    if user_data.password:
+        update_data["password_hash"] = get_password_hash(user_data.password)
+        del update_data["password"]
+    
+    if update_data:
+        update_data["updated_at"] = datetime.utcnow()
+        await db.users.update_one({"id": user_id}, {"$set": update_data})
+    
+    updated_user = await db.users.find_one({"id": user_id})
+    return UserResponse(**updated_user)
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Delete user (admin only)"""
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User deleted successfully"}
 
 # Menu endpoints
-@api_router.get("/menu", response_model=List[MenuItem])
+@api_router.get("/menu", response_model=List[MenuItemWithCategory])
 async def get_menu(current_user: User = Depends(get_current_user)):
-    """Get all available menu items"""
-    menu_items = await db.menu_items.find({"available": True, "on_stop_list": False}).to_list(1000)
-    return [MenuItem(**item) for item in menu_items]
+    """Get all available menu items with category information"""
+    pipeline = [
+        {"$match": {"available": True, "on_stop_list": False}},
+        {"$lookup": {
+            "from": "categories",
+            "localField": "category_id",
+            "foreignField": "id",
+            "as": "category"
+        }},
+        {"$unwind": "$category"},
+        {"$match": {"category.is_active": True}},
+        {"$sort": {"category.sort_order": 1, "name": 1}}
+    ]
+    
+    menu_items = await db.menu_items.aggregate(pipeline).to_list(1000)
+    
+    result = []
+    for item in menu_items:
+        result.append(MenuItemWithCategory(
+            id=item["id"],
+            name=item["name"],
+            description=item["description"],
+            price=item["price"],
+            category_id=item["category_id"],
+            category_name=item["category"]["name"],
+            category_display_name=item["category"]["display_name"],
+            category_emoji=item["category"]["emoji"],
+            item_type=item["item_type"],
+            available=item["available"],
+            on_stop_list=item["on_stop_list"],
+            image_url=item.get("image_url"),
+            created_at=item["created_at"],
+            updated_at=item["updated_at"]
+        ))
+    
+    return result
 
-@api_router.get("/menu/all", response_model=List[MenuItem])
+@api_router.get("/menu/all", response_model=List[MenuItemWithCategory])
 async def get_all_menu_items(current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
     """Get all menu items including unavailable ones (admin only)"""
-    menu_items = await db.menu_items.find().to_list(1000)
-    return [MenuItem(**item) for item in menu_items]
+    pipeline = [
+        {"$lookup": {
+            "from": "categories",
+            "localField": "category_id",
+            "foreignField": "id",
+            "as": "category"
+        }},
+        {"$unwind": "$category"},
+        {"$sort": {"category.sort_order": 1, "name": 1}}
+    ]
+    
+    menu_items = await db.menu_items.aggregate(pipeline).to_list(1000)
+    
+    result = []
+    for item in menu_items:
+        result.append(MenuItemWithCategory(
+            id=item["id"],
+            name=item["name"],
+            description=item["description"],
+            price=item["price"],
+            category_id=item["category_id"],
+            category_name=item["category"]["name"],
+            category_display_name=item["category"]["display_name"],
+            category_emoji=item["category"]["emoji"],
+            item_type=item["item_type"],
+            available=item["available"],
+            on_stop_list=item["on_stop_list"],
+            image_url=item.get("image_url"),
+            created_at=item["created_at"],
+            updated_at=item["updated_at"]
+        ))
+    
+    return result
 
 @api_router.post("/menu", response_model=MenuItem)
 async def create_menu_item(item_data: MenuItemCreate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
     """Create new menu item (admin only)"""
+    # Verify category exists
+    category = await db.categories.find_one({"id": item_data.category_id})
+    if not category:
+        raise HTTPException(status_code=400, detail="Category not found")
+    
     item = MenuItem(**item_data.dict())
     await db.menu_items.insert_one(item.dict())
     return item
@@ -413,8 +597,15 @@ async def update_menu_item(item_id: str, item_data: MenuItemUpdate, current_user
     if not item:
         raise HTTPException(status_code=404, detail="Menu item not found")
     
+    # Verify category exists if category_id is being updated
+    if item_data.category_id:
+        category = await db.categories.find_one({"id": item_data.category_id})
+        if not category:
+            raise HTTPException(status_code=400, detail="Category not found")
+    
     update_data = {k: v for k, v in item_data.dict().items() if v is not None}
     if update_data:
+        update_data["updated_at"] = datetime.utcnow()
         await db.menu_items.update_one({"id": item_id}, {"$set": update_data})
     
     updated_item = await db.menu_items.find_one({"id": item_id})
@@ -428,17 +619,83 @@ async def delete_menu_item(item_id: str, current_user: User = Depends(require_ro
         raise HTTPException(status_code=404, detail="Menu item not found")
     return {"message": "Menu item deleted successfully"}
 
-@api_router.get("/menu/category/{category}", response_model=List[MenuItem])
-async def get_menu_by_category(category: MenuCategory, current_user: User = Depends(get_current_user)):
+@api_router.get("/menu/category/{category_id}", response_model=List[MenuItemWithCategory])
+async def get_menu_by_category(category_id: str, current_user: User = Depends(get_current_user)):
     """Get menu items by category"""
-    menu_items = await db.menu_items.find({"category": category, "available": True, "on_stop_list": False}).to_list(1000)
-    return [MenuItem(**item) for item in menu_items]
+    pipeline = [
+        {"$match": {"category_id": category_id, "available": True, "on_stop_list": False}},
+        {"$lookup": {
+            "from": "categories",
+            "localField": "category_id",
+            "foreignField": "id",
+            "as": "category"
+        }},
+        {"$unwind": "$category"},
+        {"$match": {"category.is_active": True}},
+        {"$sort": {"name": 1}}
+    ]
+    
+    menu_items = await db.menu_items.aggregate(pipeline).to_list(1000)
+    
+    result = []
+    for item in menu_items:
+        result.append(MenuItemWithCategory(
+            id=item["id"],
+            name=item["name"],
+            description=item["description"],
+            price=item["price"],
+            category_id=item["category_id"],
+            category_name=item["category"]["name"],
+            category_display_name=item["category"]["display_name"],
+            category_emoji=item["category"]["emoji"],
+            item_type=item["item_type"],
+            available=item["available"],
+            on_stop_list=item["on_stop_list"],
+            image_url=item.get("image_url"),
+            created_at=item["created_at"],
+            updated_at=item["updated_at"]
+        ))
+    
+    return result
 
-@api_router.get("/menu/type/{item_type}", response_model=List[MenuItem])
+@api_router.get("/menu/type/{item_type}", response_model=List[MenuItemWithCategory])
 async def get_menu_by_type(item_type: ItemType, current_user: User = Depends(get_current_user)):
     """Get menu items by type (food/drink)"""
-    menu_items = await db.menu_items.find({"item_type": item_type, "available": True, "on_stop_list": False}).to_list(1000)
-    return [MenuItem(**item) for item in menu_items]
+    pipeline = [
+        {"$match": {"item_type": item_type, "available": True, "on_stop_list": False}},
+        {"$lookup": {
+            "from": "categories",
+            "localField": "category_id",
+            "foreignField": "id",
+            "as": "category"
+        }},
+        {"$unwind": "$category"},
+        {"$match": {"category.is_active": True}},
+        {"$sort": {"category.sort_order": 1, "name": 1}}
+    ]
+    
+    menu_items = await db.menu_items.aggregate(pipeline).to_list(1000)
+    
+    result = []
+    for item in menu_items:
+        result.append(MenuItemWithCategory(
+            id=item["id"],
+            name=item["name"],
+            description=item["description"],
+            price=item["price"],
+            category_id=item["category_id"],
+            category_name=item["category"]["name"],
+            category_display_name=item["category"]["display_name"],
+            category_emoji=item["category"]["emoji"],
+            item_type=item["item_type"],
+            available=item["available"],
+            on_stop_list=item["on_stop_list"],
+            image_url=item.get("image_url"),
+            created_at=item["created_at"],
+            updated_at=item["updated_at"]
+        ))
+    
+    return result
 
 # Order endpoints
 @api_router.post("/orders", response_model=Order)
@@ -585,6 +842,23 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     confirmed_orders = await db.orders.count_documents({**filter_query, "status": OrderStatus.CONFIRMED})
     preparing_orders = await db.orders.count_documents({**filter_query, "status": OrderStatus.PREPARING})
     ready_orders = await db.orders.count_documents({**filter_query, "status": OrderStatus.READY})
+    
+    # Additional stats for admin
+    if current_user.role == UserRole.ADMINISTRATOR:
+        total_users = await db.users.count_documents({})
+        total_categories = await db.categories.count_documents({"is_active": True})
+        total_menu_items = await db.menu_items.count_documents({"available": True})
+        
+        return {
+            "total_orders": total_orders,
+            "pending_orders": pending_orders,
+            "confirmed_orders": confirmed_orders,
+            "preparing_orders": preparing_orders,
+            "ready_orders": ready_orders,
+            "total_users": total_users,
+            "total_categories": total_categories,
+            "total_menu_items": total_menu_items
+        }
     
     return {
         "total_orders": total_orders,

@@ -94,8 +94,10 @@ class EnhancedRestaurantTester:
         if "administrator" in self.tokens:
             try:
                 self.set_auth_header("administrator")
+                # Use timestamp to ensure unique username
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 new_user_data = {
-                    "username": "test_waitress",
+                    "username": f"test_waitress_{timestamp}",
                     "password": "testpass123",
                     "role": "waitress",
                     "full_name": "Test Waitress"

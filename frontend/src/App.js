@@ -426,11 +426,16 @@ const WaitressInterface = () => {
                           <p className="text-sm text-gray-600 mb-2">{item.description}</p>
                           <div className="flex justify-between items-center">
                             <span className="font-bold text-green-600">${item.price.toFixed(2)}</span>
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              item.item_type === 'food' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {item.item_type}
-                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                item.item_type === 'food' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {item.item_type}
+                              </span>
+                              <span className={`category-badge category-${item.category}`}>
+                                {categoryDisplayNames[item.category]?.split(' ')[0] || item.category}
+                              </span>
+                            </div>
                           </div>
                           <div className="mt-2">
                             {currentOrder.clients.map((client, index) => (

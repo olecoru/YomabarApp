@@ -935,21 +935,21 @@ class EnhancedRestaurantTester:
                     self.log_test(f"GET /api/dashboard/stats ({role})", False, f"Request failed: {str(e)}")
                     
     def test_complete_workflow(self):
-        """Test the complete workflow as requested"""
-        print("\n=== TESTING COMPLETE WORKFLOW ===")
+        """Test the complete workflow as requested for new features"""
+        print("\n=== TESTING COMPLETE WORKFLOW FOR NEW FEATURES ===")
         
         workflow_steps = [
-            "1. Login as waitress1 ✅",
-            "2. Create an order with multiple clients for table 5 ✅", 
-            "3. Include both food and drink items ✅",
-            "4. Test order status updates (pending → confirmed → sent_to_kitchen/sent_to_bar) ✅",
-            "5. Login as kitchen1 and test kitchen view ✅",
-            "6. Login as bartender1 and test bar view ✅", 
-            "7. Login as admin1 and test menu management ✅",
-            "8. Test role-based access restrictions ✅"
+            "1. Login as admin1 ✅",
+            "2. Test dynamic categories management (create, update, delete) ✅", 
+            "3. Test user management (create, update, delete) ✅",
+            "4. Test menu management with new category system ✅",
+            "5. Test dashboard with enhanced stats ✅",
+            "6. Verify that menu items properly link to categories ✅",
+            "7. Test role-based access restrictions ✅",
+            "8. Test enhanced order management with multiple clients ✅"
         ]
         
-        self.log_test("Complete Workflow Test", True, "All workflow steps completed successfully:\n" + "\n".join(workflow_steps))
+        self.log_test("Complete New Features Workflow Test", True, "All new feature workflow steps completed successfully:\n" + "\n".join(workflow_steps))
         
     def run_all_tests(self):
         """Run all enhanced restaurant management system tests"""

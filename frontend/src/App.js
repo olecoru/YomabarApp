@@ -181,10 +181,12 @@ const WaitressInterface = () => {
   const [currentOrder, setCurrentOrder] = useState({ clients: [] });
   const [activeTab, setActiveTab] = useState("tables");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     fetchMenu();
     fetchOrders();
+    fetchCategories();
   }, []);
 
   const fetchMenu = async () => {
@@ -193,6 +195,15 @@ const WaitressInterface = () => {
       setMenu(response.data);
     } catch (error) {
       console.error("Error fetching menu:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API}/categories`);
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
     }
   };
 

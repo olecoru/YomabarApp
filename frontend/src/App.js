@@ -798,18 +798,58 @@ const AdministratorInterface = () => {
   const [activeTab, setActiveTab] = useState("orders");
   const [orders, setOrders] = useState([]);
   const [menu, setMenu] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(false);
+  
+  // Category management state
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    display_name: "",
+    emoji: "",
+    description: "",
+    sort_order: 1
+  });
+  const [editingCategory, setEditingCategory] = useState(null);
+  
+  // User management state
+  const [newUser, setNewUser] = useState({
+    username: "",
+    password: "",
+    role: "waitress",
+    full_name: "",
+    email: "",
+    phone: ""
+  });
+  const [editingUser, setEditingUser] = useState(null);
+  
+  // Menu item management state
   const [newMenuItem, setNewMenuItem] = useState({
     name: "",
     description: "",
     price: 0,
-    category: "appetizers",
+    category_id: "",
     item_type: "food"
   });
 
   useEffect(() => {
-    fetchOrders();
-    fetchAllMenu();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([
+        fetchOrders(),
+        fetchAllMenu(),
+        fetchCategories(),
+        fetchUsers(),
+        fetchStats()
+      ]);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -829,19 +869,170 @@ const AdministratorInterface = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API}/categories/all`);
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/users`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get(`${API}/dashboard/stats`);
+      setStats(response.data);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  // Category management functions
+  const addCategory = async () => {
+    if (!newCategory.name || !newCategory.display_name || !newCategory.emoji) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/categories`, newCategory);
+      setNewCategory({
+        name: "",
+        display_name: "",
+        emoji: "",
+        description: "",
+        sort_order: 1
+      });
+      await fetchCategories();
+      await fetchAllMenu();
+    } catch (error) {
+      console.error("Error adding category:", error);
+      alert("Error adding category: " + (error.response?.data?.detail || "Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateCategory = async (categoryId, updateData) => {
+    setLoading(true);
+    try {
+      await axios.put(`${API}/categories/${categoryId}`, updateData);
+      setEditingCategory(null);
+      await fetchCategories();
+      await fetchAllMenu();
+    } catch (error) {
+      console.error("Error updating category:", error);
+      alert("Error updating category: " + (error.response?.data?.detail || "Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCategory = async (categoryId) => {
+    if (window.confirm("Are you sure you want to delete this category?")) {
+      setLoading(true);
+      try {
+        await axios.delete(`${API}/categories/${categoryId}`);
+        await fetchCategories();
+        await fetchAllMenu();
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        alert("Error deleting category: " + (error.response?.data?.detail || "Unknown error"));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // User management functions
+  const addUser = async () => {
+    if (!newUser.username || !newUser.password || !newUser.full_name) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/users`, newUser);
+      setNewUser({
+        username: "",
+        password: "",
+        role: "waitress",
+        full_name: "",
+        email: "",
+        phone: ""
+      });
+      await fetchUsers();
+    } catch (error) {
+      console.error("Error adding user:", error);
+      alert("Error adding user: " + (error.response?.data?.detail || "Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateUser = async (userId, updateData) => {
+    setLoading(true);
+    try {
+      await axios.put(`${API}/users/${userId}`, updateData);
+      setEditingUser(null);
+      await fetchUsers();
+    } catch (error) {
+      console.error("Error updating user:", error);
+      alert("Error updating user: " + (error.response?.data?.detail || "Unknown error"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteUser = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      setLoading(true);
+      try {
+        await axios.delete(`${API}/users/${userId}`);
+        await fetchUsers();
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        alert("Error deleting user: " + (error.response?.data?.detail || "Unknown error"));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Menu item functions
   const addMenuItem = async () => {
+    if (!newMenuItem.name || !newMenuItem.category_id || !newMenuItem.price) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    
+    setLoading(true);
     try {
       await axios.post(`${API}/menu`, newMenuItem);
       setNewMenuItem({
         name: "",
         description: "",
         price: 0,
-        category: "appetizers",
+        category_id: "",
         item_type: "food"
       });
       fetchAllMenu();
     } catch (error) {
       console.error("Error adding menu item:", error);
+      alert("Error adding menu item: " + (error.response?.data?.detail || "Unknown error"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -875,29 +1066,53 @@ const AdministratorInterface = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 admin-interface">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <h1 className="text-2xl font-bold text-gray-900">
               Administrator: {user.full_name}
             </h1>
-            <div className="flex space-x-4">
+            <div className="flex space-x-2 flex-wrap">
               <button
-                onClick={() => setActiveTab("orders")}
-                className={`px-4 py-2 rounded-md ${
-                  activeTab === "orders" ? "bg-orange-500 text-white" : "bg-gray-200"
+                onClick={() => setActiveTab("dashboard")}
+                className={`px-3 py-2 rounded-md text-sm transition-colors ${
+                  activeTab === "dashboard" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
-                All Orders
+                Dashboard
+              </button>
+              <button
+                onClick={() => setActiveTab("orders")}
+                className={`px-3 py-2 rounded-md text-sm transition-colors ${
+                  activeTab === "orders" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                Orders
+              </button>
+              <button
+                onClick={() => setActiveTab("categories")}
+                className={`px-3 py-2 rounded-md text-sm transition-colors ${
+                  activeTab === "categories" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                Categories
               </button>
               <button
                 onClick={() => setActiveTab("menu")}
-                className={`px-4 py-2 rounded-md ${
-                  activeTab === "menu" ? "bg-orange-500 text-white" : "bg-gray-200"
+                className={`px-3 py-2 rounded-md text-sm transition-colors ${
+                  activeTab === "menu" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
-                Menu Management
+                Menu
+              </button>
+              <button
+                onClick={() => setActiveTab("users")}
+                className={`px-3 py-2 rounded-md text-sm transition-colors ${
+                  activeTab === "users" ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                Users
               </button>
             </div>
           </div>
@@ -905,194 +1120,158 @@ const AdministratorInterface = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "orders" && (
+        
+        {/* Dashboard Tab */}
+        {activeTab === "dashboard" && (
           <div>
-            <h2 className="text-xl font-bold mb-4">All Orders</h2>
-            <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order.id} className="bg-white p-6 rounded-lg shadow-md">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">Table {order.table_number}</h3>
-                      <p className="text-sm text-gray-600">Waitress: {order.waitress_name}</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(order.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-green-600">${order.total_amount.toFixed(2)}</div>
-                    </div>
-                  </div>
-                  
-                  {order.clients.map((client, index) => (
-                    <div key={index} className="mb-4 p-3 border rounded">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-semibold">Client {client.client_number}</h4>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          client.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          client.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                          client.status === 'preparing' ? 'bg-orange-100 text-orange-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {client.status}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        {client.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex justify-between text-sm">
-                            <span>{item.quantity}x {item.menu_item_name}</span>
-                            <span>${(item.price * item.quantity).toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="font-semibold text-right mt-2">
-                        Subtotal: ${client.subtotal.toFixed(2)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
+            <h2 className="text-xl font-bold mb-6">Dashboard Statistics</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-blue-600">{stats.total_orders || 0}</div>
+                <div className="text-gray-600">Total Orders</div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-green-600">{stats.total_users || 0}</div>
+                <div className="text-gray-600">Total Users</div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-purple-600">{stats.total_categories || 0}</div>
+                <div className="text-gray-600">Categories</div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-orange-600">{stats.total_menu_items || 0}</div>
+                <div className="text-gray-600">Menu Items</div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-yellow-600">{stats.pending_orders || 0}</div>
+                <div className="text-gray-600">Pending Orders</div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-blue-600">{stats.confirmed_orders || 0}</div>
+                <div className="text-gray-600">Confirmed Orders</div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-orange-600">{stats.preparing_orders || 0}</div>
+                <div className="text-gray-600">Preparing Orders</div>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="text-2xl font-bold text-green-600">{stats.ready_orders || 0}</div>
+                <div className="text-gray-600">Ready Orders</div>
+              </div>
             </div>
           </div>
         )}
 
-        {activeTab === "menu" && (
+        {/* Categories Tab */}
+        {activeTab === "categories" && (
           <div>
-            <h2 className="text-xl font-bold mb-4">Menu Management</h2>
+            <h2 className="text-xl font-bold mb-4">Category Management</h2>
             
-            {/* Add new menu item */}
+            {/* Add new category */}
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-              <h3 className="text-lg font-semibold mb-4">Add New Menu Item</h3>
+              <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <input
                   type="text"
-                  placeholder="Item Name"
-                  value={newMenuItem.name}
-                  onChange={(e) => setNewMenuItem({...newMenuItem, name: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Category Name (e.g., appetizers)"
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="text"
-                  placeholder="Description"
-                  value={newMenuItem.description}
-                  onChange={(e) => setNewMenuItem({...newMenuItem, description: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Display Name (e.g., Appetizers)"
+                  value={newCategory.display_name}
+                  onChange={(e) => setNewCategory({...newCategory, display_name: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Emoji (e.g., 🥗)"
+                  value={newCategory.emoji}
+                  onChange={(e) => setNewCategory({...newCategory, emoji: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Description (optional)"
+                  value={newCategory.description}
+                  onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="number"
-                  placeholder="Price"
-                  value={newMenuItem.price}
-                  onChange={(e) => setNewMenuItem({...newMenuItem, price: parseFloat(e.target.value)})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Sort Order"
+                  value={newCategory.sort_order}
+                  onChange={(e) => setNewCategory({...newCategory, sort_order: parseInt(e.target.value)})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
-                <select
-                  value={newMenuItem.category}
-                  onChange={(e) => setNewMenuItem({...newMenuItem, category: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="appetizers">Appetizers</option>
-                  <option value="main_dishes">Main Dishes</option>
-                  <option value="desserts">Desserts</option>
-                  <option value="beverages">Beverages</option>
-                </select>
-                <select
-                  value={newMenuItem.item_type}
-                  onChange={(e) => setNewMenuItem({...newMenuItem, item_type: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="food">Food</option>
-                  <option value="drink">Drink</option>
-                </select>
                 <button
-                  onClick={addMenuItem}
-                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                  onClick={addCategory}
+                  disabled={loading}
+                  className="touch-button bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400"
                 >
-                  Add Item
+                  {loading ? "Adding..." : "Add Category"}
                 </button>
               </div>
             </div>
             
-            {/* Menu items list */}
+            {/* Categories list */}
             <div className="bg-white rounded-lg shadow-md">
               <div className="p-4 border-b">
-                <h3 className="text-lg font-semibold">Current Menu Items</h3>
+                <h3 className="text-lg font-semibold">Current Categories</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Price
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Display Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sort Order</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {menu.map((item) => (
-                      <tr key={item.id}>
+                    {categories.map((category) => (
+                      <tr key={category.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                          <div className="text-sm text-gray-500">{item.description}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {item.category.replace(/_/g, ' ')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {item.item_type}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${item.price.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="space-y-1">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {item.available ? 'Available' : 'Unavailable'}
-                            </span>
-                            {item.on_stop_list && (
-                              <span className="block px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">
-                                Stop List
-                              </span>
-                            )}
+                          <div className="flex items-center">
+                            <span className="text-2xl mr-2">{category.emoji}</span>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{category.name}</div>
+                              <div className="text-sm text-gray-500">{category.description}</div>
+                            </div>
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {category.display_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {category.sort_order}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {category.is_active ? 'Active' : 'Inactive'}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <button
-                            onClick={() => toggleAvailable(item.id, item.available)}
-                            className={`px-2 py-1 rounded text-xs ${
-                              item.available ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'
+                            onClick={() => updateCategory(category.id, { is_active: !category.is_active })}
+                            className={`touch-button px-2 py-1 rounded text-xs ${
+                              category.is_active ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'
                             }`}
                           >
-                            {item.available ? 'Disable' : 'Enable'}
+                            {category.is_active ? 'Disable' : 'Enable'}
                           </button>
                           <button
-                            onClick={() => toggleStopList(item.id, item.on_stop_list)}
-                            className={`px-2 py-1 rounded text-xs ${
-                              item.on_stop_list ? 'bg-gray-500 text-white hover:bg-gray-600' : 'bg-yellow-500 text-white hover:bg-yellow-600'
-                            }`}
-                          >
-                            {item.on_stop_list ? 'Remove Stop' : 'Add Stop'}
-                          </button>
-                          <button
-                            onClick={() => deleteMenuItem(item.id)}
-                            className="px-2 py-1 rounded text-xs bg-red-500 text-white hover:bg-red-600"
+                            onClick={() => deleteCategory(category.id)}
+                            className="touch-button px-2 py-1 rounded text-xs bg-red-500 text-white hover:bg-red-600"
                           >
                             Delete
                           </button>
@@ -1105,10 +1284,139 @@ const AdministratorInterface = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-};
+
+        {/* Users Tab */}
+        {activeTab === "users" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">User Management</h2>
+            
+            {/* Add new user */}
+            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              <h3 className="text-lg font-semibold mb-4">Add New User</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={newUser.username}
+                  onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="email"
+                  placeholder="Email (optional)"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone (optional)"
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <select
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="waitress">Waitress</option>
+                  <option value="kitchen">Kitchen</option>
+                  <option value="bartender">Bartender</option>
+                  <option value="administrator">Administrator</option>
+                </select>
+                <button
+                  onClick={addUser}
+                  disabled={loading}
+                  className="touch-button bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400"
+                >
+                  {loading ? "Adding..." : "Add User"}
+                </button>
+              </div>
+            </div>
+            
+            {/* Users list */}
+            <div className="bg-white rounded-lg shadow-md">
+              <div className="p-4 border-b">
+                <h3 className="text-lg font-semibold">Current Users</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {users.map((user) => (
+                      <tr key={user.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                          <div className="text-sm text-gray-500">{user.full_name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            user.role === 'administrator' ? 'bg-purple-100 text-purple-800' :
+                            user.role === 'waitress' ? 'bg-blue-100 text-blue-800' :
+                            user.role === 'kitchen' ? 'bg-orange-100 text-orange-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div>{user.email || 'No email'}</div>
+                          <div className="text-gray-500">{user.phone || 'No phone'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => updateUser(user.id, { is_active: !user.is_active })}
+                            className={`touch-button px-2 py-1 rounded text-xs ${
+                              user.is_active ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'
+                            }`}
+                          >
+                            {user.is_active ? 'Disable' : 'Enable'}
+                          </button>
+                          <button
+                            onClick={() => deleteUser(user.id)}
+                            className="touch-button px-2 py-1 rounded text-xs bg-red-500 text-white hover:bg-red-600"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
 // Main App Component
 const MainApp = () => {

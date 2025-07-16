@@ -352,9 +352,38 @@ const WaitressInterface = () => {
               </button>
             </div>
 
+            {/* Category Filter */}
+            <div className="mb-6 flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory("all")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === "all" 
+                    ? "bg-orange-500 text-white" 
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                All Categories
+              </button>
+              {Object.entries(categoryDisplayNames).map(([category, displayName]) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedCategory === category
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  {displayName}
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
-                {Object.entries(groupedMenu).map(([category, items]) => (
+                {Object.entries(groupedMenu)
+                  .filter(([category]) => selectedCategory === "all" || selectedCategory === category)
+                  .map(([category, items]) => (
                   <div key={category} className="mb-6">
                     <h3 className="text-lg font-semibold mb-3 text-gray-800 border-b-2 border-orange-400 pb-2 flex items-center">
                       <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm mr-3">

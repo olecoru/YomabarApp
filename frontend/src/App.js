@@ -152,6 +152,7 @@ const WaitressInterface = () => {
   const [orders, setOrders] = useState([]);
   const [currentOrder, setCurrentOrder] = useState({ clients: [] });
   const [activeTab, setActiveTab] = useState("tables");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   useEffect(() => {
     fetchMenu();

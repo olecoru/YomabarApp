@@ -894,6 +894,8 @@ class EnhancedRestaurantTester:
                         self.log_test(f"{method} {endpoint} (waitress denied)", False, f"Expected 403, got HTTP {response.status_code}")
                 except Exception as e:
                     self.log_test(f"{method} {endpoint} (waitress denied)", False, f"Request failed: {str(e)}")
+
+    def test_additional_features(self):
         """Test additional features"""
         print("\n=== TESTING ADDITIONAL FEATURES ===")
         

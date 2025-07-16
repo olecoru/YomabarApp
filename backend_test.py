@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Enhanced Restaurant Management System Backend API Testing
-Tests authentication, role-based access, menu management, and order management
+Tests new features: Dynamic Categories, Enhanced User Management, Enhanced Menu System, Enhanced Dashboard
 """
 
 import requests

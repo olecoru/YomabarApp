@@ -435,7 +435,465 @@ class EnhancedRestaurantTester:
         except Exception as e:
             self.log_test("GET /api/orders/table/5", False, f"Request failed: {str(e)}")
             
-    def test_additional_features(self):
+    def test_dynamic_categories_management(self):
+        """Test dynamic categories management endpoints"""
+        print("\n=== TESTING DYNAMIC CATEGORIES MANAGEMENT ===")
+        
+        # Test 1: GET /api/categories (get active categories - all authenticated users)
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/categories")
+                
+                if response.status_code == 200:
+                    categories = response.json()
+                    self.categories = categories
+                    active_categories = [cat for cat in categories if cat.get("is_active", True)]
+                    if len(active_categories) == len(categories):
+                        self.log_test("GET /api/categories (waitress)", True, f"Retrieved {len(categories)} active categories")
+                    else:
+                        self.log_test("GET /api/categories (waitress)", False, "Response includes inactive categories")
+                else:
+                    self.log_test("GET /api/categories (waitress)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/categories (waitress)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: GET /api/categories/all (admin only - all categories including inactive)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/categories/all")
+                
+                if response.status_code == 200:
+                    all_categories = response.json()
+                    self.log_test("GET /api/categories/all (admin)", True, f"Retrieved {len(all_categories)} total categories (including inactive)")
+                else:
+                    self.log_test("GET /api/categories/all (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/categories/all (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 3: POST /api/categories (admin only - create category)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                new_category_data = {
+                    "name": f"test_category_{timestamp}",
+                    "display_name": "Test Category",
+                    "emoji": "🧪",
+                    "description": "Test category for API testing",
+                    "sort_order": 99
+                }
+                response = self.session.post(f"{BACKEND_URL}/categories", json=new_category_data)
+                
+                if response.status_code == 200:
+                    created_category = response.json()
+                    self.created_category_id = created_category["id"]
+                    if created_category["name"] == new_category_data["name"]:
+                        self.log_test("POST /api/categories (admin)", True, f"Successfully created category: {created_category['display_name']}")
+                    else:
+                        self.log_test("POST /api/categories (admin)", False, "Created category data doesn't match input")
+                else:
+                    self.log_test("POST /api/categories (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("POST /api/categories (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 4: PUT /api/categories/{category_id} (admin only - update category)
+        if "administrator" in self.tokens and self.created_category_id:
+            try:
+                self.set_auth_header("administrator")
+                update_data = {
+                    "display_name": "Updated Test Category",
+                    "description": "Updated description for test category",
+                    "is_active": False
+                }
+                response = self.session.put(f"{BACKEND_URL}/categories/{self.created_category_id}", json=update_data)
+                
+                if response.status_code == 200:
+                    updated_category = response.json()
+                    if updated_category["display_name"] == update_data["display_name"] and not updated_category["is_active"]:
+                        self.log_test("PUT /api/categories/{category_id} (admin)", True, "Successfully updated category")
+                    else:
+                        self.log_test("PUT /api/categories/{category_id} (admin)", False, "Category update failed")
+                else:
+                    self.log_test("PUT /api/categories/{category_id} (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("PUT /api/categories/{category_id} (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 5: DELETE /api/categories/{category_id} (admin only - delete category)
+        if "administrator" in self.tokens and self.created_category_id:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.delete(f"{BACKEND_URL}/categories/{self.created_category_id}")
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result and "deleted" in result["message"].lower():
+                        self.log_test("DELETE /api/categories/{category_id} (admin)", True, "Successfully deleted category")
+                    else:
+                        self.log_test("DELETE /api/categories/{category_id} (admin)", False, "Unexpected delete response")
+                else:
+                    self.log_test("DELETE /api/categories/{category_id} (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("DELETE /api/categories/{category_id} (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 6: Test role restrictions - waitress trying to create category (should fail)
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                new_category_data = {
+                    "name": "unauthorized_category",
+                    "display_name": "Unauthorized Category",
+                    "emoji": "❌"
+                }
+                response = self.session.post(f"{BACKEND_URL}/categories", json=new_category_data)
+                
+                if response.status_code == 403:
+                    self.log_test("POST /api/categories (waitress - should fail)", True, "Correctly denied access for non-admin user")
+                else:
+                    self.log_test("POST /api/categories (waitress - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("POST /api/categories (waitress - should fail)", False, f"Request failed: {str(e)}")
+
+    def test_enhanced_user_management(self):
+        """Test enhanced user management endpoints"""
+        print("\n=== TESTING ENHANCED USER MANAGEMENT ===")
+        
+        # Test 1: GET /api/users (admin only - get all users)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/users")
+                
+                if response.status_code == 200:
+                    users = response.json()
+                    if len(users) >= 4:  # Should have at least the 4 default users
+                        self.log_test("GET /api/users (admin)", True, f"Retrieved {len(users)} users")
+                    else:
+                        self.log_test("GET /api/users (admin)", False, f"Expected at least 4 users, got {len(users)}")
+                else:
+                    self.log_test("GET /api/users (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/users (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: POST /api/users (admin only - create user)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                new_user_data = {
+                    "username": f"test_user_{timestamp}",
+                    "password": "testpass123",
+                    "role": "waitress",
+                    "full_name": "Test User",
+                    "email": f"test_{timestamp}@restaurant.com",
+                    "phone": "555-0123"
+                }
+                response = self.session.post(f"{BACKEND_URL}/users", json=new_user_data)
+                
+                if response.status_code == 200:
+                    created_user = response.json()
+                    self.created_user_id = created_user["id"]
+                    if created_user["username"] == new_user_data["username"]:
+                        self.log_test("POST /api/users (admin)", True, f"Successfully created user: {created_user['full_name']}")
+                    else:
+                        self.log_test("POST /api/users (admin)", False, "Created user data doesn't match input")
+                else:
+                    self.log_test("POST /api/users (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("POST /api/users (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 3: GET /api/users/{user_id} (admin only - get specific user)
+        if "administrator" in self.tokens and self.created_user_id:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/users/{self.created_user_id}")
+                
+                if response.status_code == 200:
+                    user = response.json()
+                    if user["id"] == self.created_user_id:
+                        self.log_test("GET /api/users/{user_id} (admin)", True, f"Retrieved specific user: {user['full_name']}")
+                    else:
+                        self.log_test("GET /api/users/{user_id} (admin)", False, "User ID mismatch")
+                else:
+                    self.log_test("GET /api/users/{user_id} (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/users/{user_id} (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 4: PUT /api/users/{user_id} (admin only - update user)
+        if "administrator" in self.tokens and self.created_user_id:
+            try:
+                self.set_auth_header("administrator")
+                update_data = {
+                    "full_name": "Updated Test User",
+                    "email": "updated@restaurant.com",
+                    "is_active": False
+                }
+                response = self.session.put(f"{BACKEND_URL}/users/{self.created_user_id}", json=update_data)
+                
+                if response.status_code == 200:
+                    updated_user = response.json()
+                    if updated_user["full_name"] == update_data["full_name"] and not updated_user["is_active"]:
+                        self.log_test("PUT /api/users/{user_id} (admin)", True, "Successfully updated user")
+                    else:
+                        self.log_test("PUT /api/users/{user_id} (admin)", False, "User update failed")
+                else:
+                    self.log_test("PUT /api/users/{user_id} (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("PUT /api/users/{user_id} (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 5: DELETE /api/users/{user_id} (admin only - delete user)
+        if "administrator" in self.tokens and self.created_user_id:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.delete(f"{BACKEND_URL}/users/{self.created_user_id}")
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result and "deleted" in result["message"].lower():
+                        self.log_test("DELETE /api/users/{user_id} (admin)", True, "Successfully deleted user")
+                    else:
+                        self.log_test("DELETE /api/users/{user_id} (admin)", False, "Unexpected delete response")
+                else:
+                    self.log_test("DELETE /api/users/{user_id} (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("DELETE /api/users/{user_id} (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 6: Test role restrictions - waitress trying to get users (should fail)
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/users")
+                
+                if response.status_code == 403:
+                    self.log_test("GET /api/users (waitress - should fail)", True, "Correctly denied access for non-admin user")
+                else:
+                    self.log_test("GET /api/users (waitress - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("GET /api/users (waitress - should fail)", False, f"Request failed: {str(e)}")
+
+    def test_enhanced_menu_system(self):
+        """Test enhanced menu system with dynamic categories"""
+        print("\n=== TESTING ENHANCED MENU SYSTEM ===")
+        
+        # Test 1: GET /api/menu (returns MenuItemWithCategory objects)
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/menu")
+                
+                if response.status_code == 200:
+                    menu_data = response.json()
+                    self.menu_items = menu_data
+                    
+                    # Verify MenuItemWithCategory structure
+                    required_fields = ["id", "name", "description", "price", "category_id", 
+                                     "category_name", "category_display_name", "category_emoji", "item_type"]
+                    
+                    if menu_data and all(all(field in item for field in required_fields) for item in menu_data):
+                        self.log_test("GET /api/menu (MenuItemWithCategory)", True, 
+                                    f"Retrieved {len(menu_data)} menu items with category info")
+                    else:
+                        self.log_test("GET /api/menu (MenuItemWithCategory)", False, 
+                                    "Menu items missing required category fields")
+                else:
+                    self.log_test("GET /api/menu (MenuItemWithCategory)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/menu (MenuItemWithCategory)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: GET /api/menu/all (admin only - all menu items with categories)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/menu/all")
+                
+                if response.status_code == 200:
+                    all_menu_data = response.json()
+                    
+                    # Verify all items have category information
+                    has_category_info = all(
+                        all(field in item for field in ["category_name", "category_display_name", "category_emoji"])
+                        for item in all_menu_data
+                    )
+                    
+                    if has_category_info:
+                        self.log_test("GET /api/menu/all (admin with categories)", True, 
+                                    f"Retrieved {len(all_menu_data)} menu items with category info")
+                    else:
+                        self.log_test("GET /api/menu/all (admin with categories)", False, 
+                                    "Some menu items missing category information")
+                else:
+                    self.log_test("GET /api/menu/all (admin with categories)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/menu/all (admin with categories)", False, f"Request failed: {str(e)}")
+        
+        # Test 3: POST /api/menu with dynamic category_id
+        if "administrator" in self.tokens and self.categories:
+            try:
+                self.set_auth_header("administrator")
+                # Use the first available category
+                category_id = self.categories[0]["id"]
+                
+                new_item_data = {
+                    "name": "Test Dynamic Menu Item",
+                    "description": "Test item with dynamic category",
+                    "price": 19.99,
+                    "category_id": category_id,
+                    "item_type": "food"
+                }
+                response = self.session.post(f"{BACKEND_URL}/menu", json=new_item_data)
+                
+                if response.status_code == 200:
+                    created_item = response.json()
+                    self.created_menu_item_id = created_item["id"]
+                    if created_item["category_id"] == category_id:
+                        self.log_test("POST /api/menu (dynamic category)", True, 
+                                    f"Successfully created menu item with dynamic category")
+                    else:
+                        self.log_test("POST /api/menu (dynamic category)", False, "Category ID mismatch")
+                else:
+                    self.log_test("POST /api/menu (dynamic category)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("POST /api/menu (dynamic category)", False, f"Request failed: {str(e)}")
+        
+        # Test 4: GET /api/menu/category/{category_id} with dynamic categories
+        if "waitress" in self.tokens and self.categories:
+            try:
+                self.set_auth_header("waitress")
+                category_id = self.categories[0]["id"]
+                response = self.session.get(f"{BACKEND_URL}/menu/category/{category_id}")
+                
+                if response.status_code == 200:
+                    category_items = response.json()
+                    if all(item["category_id"] == category_id for item in category_items):
+                        self.log_test("GET /api/menu/category/{category_id} (dynamic)", True, 
+                                    f"Retrieved {len(category_items)} items for dynamic category")
+                    else:
+                        self.log_test("GET /api/menu/category/{category_id} (dynamic)", False, 
+                                    "Some items don't match requested category")
+                else:
+                    self.log_test("GET /api/menu/category/{category_id} (dynamic)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/menu/category/{category_id} (dynamic)", False, f"Request failed: {str(e)}")
+
+    def test_enhanced_dashboard(self):
+        """Test enhanced dashboard with additional admin stats"""
+        print("\n=== TESTING ENHANCED DASHBOARD ===")
+        
+        # Test 1: GET /api/dashboard/stats (admin - should include additional stats)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/dashboard/stats")
+                
+                if response.status_code == 200:
+                    stats = response.json()
+                    
+                    # Check for basic stats
+                    basic_fields = ["total_orders", "pending_orders", "confirmed_orders", "preparing_orders", "ready_orders"]
+                    # Check for additional admin stats
+                    admin_fields = ["total_users", "total_categories", "total_menu_items"]
+                    
+                    has_basic = all(field in stats for field in basic_fields)
+                    has_admin = all(field in stats for field in admin_fields)
+                    
+                    if has_basic and has_admin:
+                        self.log_test("GET /api/dashboard/stats (admin enhanced)", True, 
+                                    f"Retrieved enhanced dashboard stats with admin fields")
+                    else:
+                        missing_basic = [f for f in basic_fields if f not in stats]
+                        missing_admin = [f for f in admin_fields if f not in stats]
+                        self.log_test("GET /api/dashboard/stats (admin enhanced)", False, 
+                                    f"Missing basic: {missing_basic}, Missing admin: {missing_admin}")
+                else:
+                    self.log_test("GET /api/dashboard/stats (admin enhanced)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/dashboard/stats (admin enhanced)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: GET /api/dashboard/stats (non-admin - should NOT include additional stats)
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/dashboard/stats")
+                
+                if response.status_code == 200:
+                    stats = response.json()
+                    
+                    # Check for basic stats
+                    basic_fields = ["total_orders", "pending_orders", "confirmed_orders", "preparing_orders", "ready_orders"]
+                    # Check that admin stats are NOT present
+                    admin_fields = ["total_users", "total_categories", "total_menu_items"]
+                    
+                    has_basic = all(field in stats for field in basic_fields)
+                    has_admin = any(field in stats for field in admin_fields)
+                    
+                    if has_basic and not has_admin:
+                        self.log_test("GET /api/dashboard/stats (waitress - no admin stats)", True, 
+                                    "Correctly returned basic stats without admin fields")
+                    else:
+                        self.log_test("GET /api/dashboard/stats (waitress - no admin stats)", False, 
+                                    f"Basic stats: {has_basic}, Admin stats present: {has_admin}")
+                else:
+                    self.log_test("GET /api/dashboard/stats (waitress - no admin stats)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/dashboard/stats (waitress - no admin stats)", False, f"Request failed: {str(e)}")
+
+    def test_role_based_access_restrictions(self):
+        """Test role-based access restrictions for new features"""
+        print("\n=== TESTING ROLE-BASED ACCESS RESTRICTIONS ===")
+        
+        # Test various endpoints with different roles to ensure proper restrictions
+        test_cases = [
+            # Categories - admin only
+            {"endpoint": "/categories", "method": "POST", "admin_only": True, "data": {"name": "test", "display_name": "Test", "emoji": "🧪"}},
+            {"endpoint": "/categories/all", "method": "GET", "admin_only": True},
+            
+            # Users - admin only
+            {"endpoint": "/users", "method": "GET", "admin_only": True},
+            {"endpoint": "/users", "method": "POST", "admin_only": True, "data": {"username": "test", "password": "test", "role": "waitress", "full_name": "Test"}},
+            
+            # Menu management - admin only
+            {"endpoint": "/menu", "method": "POST", "admin_only": True, "data": {"name": "test", "description": "test", "price": 10.0, "category_id": "test", "item_type": "food"}},
+            {"endpoint": "/menu/all", "method": "GET", "admin_only": True},
+        ]
+        
+        for test_case in test_cases:
+            endpoint = test_case["endpoint"]
+            method = test_case["method"]
+            admin_only = test_case["admin_only"]
+            data = test_case.get("data")
+            
+            # Test with admin (should work)
+            if "administrator" in self.tokens:
+                try:
+                    self.set_auth_header("administrator")
+                    if method == "GET":
+                        response = self.session.get(f"{BACKEND_URL}{endpoint}")
+                    elif method == "POST":
+                        response = self.session.post(f"{BACKEND_URL}{endpoint}", json=data)
+                    
+                    if response.status_code in [200, 201]:
+                        self.log_test(f"{method} {endpoint} (admin access)", True, "Admin access granted correctly")
+                    else:
+                        self.log_test(f"{method} {endpoint} (admin access)", False, f"Admin access failed: HTTP {response.status_code}")
+                except Exception as e:
+                    self.log_test(f"{method} {endpoint} (admin access)", False, f"Request failed: {str(e)}")
+            
+            # Test with waitress (should fail for admin-only endpoints)
+            if "waitress" in self.tokens and admin_only:
+                try:
+                    self.set_auth_header("waitress")
+                    if method == "GET":
+                        response = self.session.get(f"{BACKEND_URL}{endpoint}")
+                    elif method == "POST":
+                        response = self.session.post(f"{BACKEND_URL}{endpoint}", json=data)
+                    
+                    if response.status_code == 403:
+                        self.log_test(f"{method} {endpoint} (waitress denied)", True, "Waitress correctly denied access")
+                    else:
+                        self.log_test(f"{method} {endpoint} (waitress denied)", False, f"Expected 403, got HTTP {response.status_code}")
+                except Exception as e:
+                    self.log_test(f"{method} {endpoint} (waitress denied)", False, f"Request failed: {str(e)}")
         """Test additional features"""
         print("\n=== TESTING ADDITIONAL FEATURES ===")
         

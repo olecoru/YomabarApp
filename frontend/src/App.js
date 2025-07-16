@@ -270,6 +270,13 @@ const WaitressInterface = () => {
     return acc;
   }, {});
 
+  const categoryDisplayNames = {
+    appetizers: "🥗 Appetizers",
+    main_dishes: "🍽️ Main Dishes", 
+    desserts: "🍰 Desserts",
+    beverages: "🥤 Beverages"
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow-sm">

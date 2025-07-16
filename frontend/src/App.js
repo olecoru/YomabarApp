@@ -1108,6 +1108,11 @@ const AdministratorInterface = () => {
 // Main App Component
 const MainApp = () => {
   const { user, logout, showInstallPrompt, installPWA } = React.useContext(AuthContext);
+  const [showInstallBanner, setShowInstallBanner] = React.useState(showInstallPrompt);
+
+  React.useEffect(() => {
+    setShowInstallBanner(showInstallPrompt);
+  }, [showInstallPrompt]);
 
   if (!user) {
     return <Login />;
@@ -1131,7 +1136,7 @@ const MainApp = () => {
   return (
     <div className="relative">
       {/* PWA Install Prompt */}
-      {showInstallPrompt && (
+      {showInstallBanner && (
         <div className="fixed top-0 left-0 right-0 bg-orange-500 text-white p-3 z-50 flex items-center justify-between">
           <div className="flex items-center">
             <span className="text-sm font-medium">📱 Install Restaurant POS app for better experience</span>
@@ -1144,7 +1149,7 @@ const MainApp = () => {
               Install
             </button>
             <button
-              onClick={() => setShowInstallPrompt(false)}
+              onClick={() => setShowInstallBanner(false)}
               className="text-white hover:text-gray-200"
             >
               ✕

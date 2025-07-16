@@ -2,9 +2,104 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* Custom styles */
+/* PWA Specific Styles */
 .App {
   min-height: 100vh;
+  min-height: 100svh; /* For mobile browsers */
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  .max-w-7xl {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .grid {
+    gap: 0.5rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.25rem;
+  }
+  
+  .text-xl {
+    font-size: 1.125rem;
+  }
+  
+  /* Table buttons optimized for touch */
+  .table-button {
+    min-height: 4rem;
+    font-size: 0.875rem;
+    padding: 0.5rem;
+  }
+  
+  /* Menu items optimized for mobile */
+  .menu-item-card {
+    padding: 0.75rem;
+  }
+  
+  /* Order summary optimized for mobile */
+  .order-summary {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: white;
+    border-top: 2px solid #f97316;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .kitchen-tablet, .bar-tablet {
+    padding: 1rem;
+  }
+  
+  .order-card {
+    min-height: 200px;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1025px) {
+  .admin-desktop {
+    padding: 2rem;
+  }
+}
+
+/* Category badges */
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.category-appetizers {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.category-main-dishes {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.category-desserts {
+  background-color: #fce7f3;
+  color: #be185d;
+}
+
+.category-beverages {
+  background-color: #dbeafe;
+  color: #1e40af;
 }
 
 /* Smooth transitions */
@@ -31,35 +126,20 @@
   background: #a8a8a8;
 }
 
-/* Mobile responsive improvements */
-@media (max-width: 768px) {
-  .max-w-7xl {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .grid {
-    gap: 1rem;
-  }
-  
-  .text-2xl {
-    font-size: 1.5rem;
-  }
-  
-  .text-xl {
-    font-size: 1.25rem;
-  }
-}
-
 /* Order status color coding */
 .status-pending {
   background-color: #fef3c7;
   color: #92400e;
 }
 
-.status-preparing {
+.status-confirmed {
   background-color: #dbeafe;
   color: #1e40af;
+}
+
+.status-preparing {
+  background-color: #fed7aa;
+  color: #ea580c;
 }
 
 .status-ready {
@@ -73,7 +153,7 @@
 }
 
 /* Button hover effects */
-.btn-hover {
+.btn-hover:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -94,23 +174,34 @@
   animation: spin 1s linear infinite;
 }
 
-/* Responsive grid adjustments */
-@media (min-width: 640px) {
-  .grid-cols-1 {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+/* PWA Install prompt animation */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
-@media (min-width: 768px) {
-  .md\\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.pwa-install-prompt {
+  animation: slideDown 0.3s ease-out;
 }
 
-@media (min-width: 1024px) {
-  .lg\\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+/* Touch-friendly buttons */
+.touch-button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
 }
 
 /* Form styling */
@@ -125,6 +216,7 @@ select {
   font-size: 0.875rem;
   line-height: 1.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  min-height: 44px; /* Touch-friendly */
 }
 
 input[type="text"]:focus,
@@ -164,5 +256,46 @@ select:focus {
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+/* Role-specific styling */
+.waitress-interface {
+  background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+}
+
+.kitchen-interface {
+  background: linear-gradient(135deg, #fed7aa 0%, #ffffff 100%);
+}
+
+.bar-interface {
+  background: linear-gradient(135deg, #e0e7ff 0%, #ffffff 100%);
+}
+
+.admin-interface {
+  background: linear-gradient(135deg, #f3e8ff 0%, #ffffff 100%);
+}
+
+/* Offline indicator */
+.offline-indicator {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  background-color: #ef4444;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  z-index: 1000;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
   }
 }

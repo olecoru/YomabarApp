@@ -93,49 +93,7 @@ class EnhancedRestaurantTester:
             except Exception as e:
                 self.log_test(f"GET /api/auth/me ({role})", False, f"Request failed: {str(e)}")
                 
-        # Test 3: POST /api/auth/register (admin only)
-        if "administrator" in self.tokens:
-            try:
-                self.set_auth_header("administrator")
-                # Use timestamp to ensure unique username
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                new_user_data = {
-                    "username": f"test_waitress_{timestamp}",
-                    "password": "testpass123",
-                    "role": "waitress",
-                    "full_name": "Test Waitress"
-                }
-                response = self.session.post(f"{BACKEND_URL}/auth/register", json=new_user_data)
-                
-                if response.status_code == 200:
-                    created_user = response.json()
-                    if created_user["username"] == new_user_data["username"]:
-                        self.log_test("POST /api/auth/register (admin)", True, f"Successfully created user: {created_user['full_name']}")
-                    else:
-                        self.log_test("POST /api/auth/register (admin)", False, "Created user data doesn't match input")
-                else:
-                    self.log_test("POST /api/auth/register (admin)", False, f"HTTP {response.status_code}: {response.text}")
-            except Exception as e:
-                self.log_test("POST /api/auth/register (admin)", False, f"Request failed: {str(e)}")
-                
-        # Test 4: Test role restrictions - waitress trying to register
-        if "waitress" in self.tokens:
-            try:
-                self.set_auth_header("waitress")
-                new_user_data = {
-                    "username": "unauthorized_user",
-                    "password": "testpass123",
-                    "role": "waitress",
-                    "full_name": "Unauthorized User"
-                }
-                response = self.session.post(f"{BACKEND_URL}/auth/register", json=new_user_data)
-                
-                if response.status_code == 403:
-                    self.log_test("POST /api/auth/register (waitress - should fail)", True, "Correctly denied access for non-admin user")
-                else:
-                    self.log_test("POST /api/auth/register (waitress - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
-            except Exception as e:
-                self.log_test("POST /api/auth/register (waitress - should fail)", False, f"Request failed: {str(e)}")
+        # Note: User registration is handled through /api/users endpoint, not /api/auth/register
                 
     def test_enhanced_menu_management(self):
         """Test enhanced menu management endpoints"""

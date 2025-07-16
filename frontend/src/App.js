@@ -570,6 +570,211 @@ const WaitressInterface = () => {
               ))}
             </div>
           </div>
+        {/* Menu Tab */}
+        {activeTab === "menu" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">Menu Management</h2>
+            
+            {/* Add new menu item */}
+            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              <h3 className="text-lg font-semibold mb-4">Add New Menu Item</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Item Name"
+                  value={newMenuItem.name}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, name: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Description"
+                  value={newMenuItem.description}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, description: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={newMenuItem.price}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, price: parseFloat(e.target.value)})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <select
+                  value={newMenuItem.category_id}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, category_id: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Select Category</option>
+                  {categories.filter(cat => cat.is_active).map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.emoji} {cat.display_name}</option>
+                  ))}
+                </select>
+                <select
+                  value={newMenuItem.item_type}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, item_type: e.target.value})}
+                  className="touch-button px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="food">Food</option>
+                  <option value="drink">Drink</option>
+                </select>
+                <button
+                  onClick={addMenuItem}
+                  disabled={loading}
+                  className="touch-button bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400"
+                >
+                  {loading ? "Adding..." : "Add Item"}
+                </button>
+              </div>
+            </div>
+            
+            {/* Menu items list */}
+            <div className="bg-white rounded-lg shadow-md">
+              <div className="p-4 border-b">
+                <h3 className="text-lg font-semibold">Current Menu Items</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {menu.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                          <div className="text-sm text-gray-500">{item.description}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center">
+                            <span className="text-lg mr-2">{item.category_emoji}</span>
+                            {item.category_display_name}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {item.item_type}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${item.price.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {item.available ? 'Available' : 'Unavailable'}
+                            </span>
+                            {item.on_stop_list && (
+                              <span className="block px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">
+                                Stop List
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => toggleAvailable(item.id, item.available)}
+                            className={`touch-button px-2 py-1 rounded text-xs ${
+                              item.available ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-500 text-white hover:bg-green-600'
+                            }`}
+                          >
+                            {item.available ? 'Disable' : 'Enable'}
+                          </button>
+                          <button
+                            onClick={() => toggleStopList(item.id, item.on_stop_list)}
+                            className={`touch-button px-2 py-1 rounded text-xs ${
+                              item.on_stop_list ? 'bg-gray-500 text-white hover:bg-gray-600' : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                            }`}
+                          >
+                            {item.on_stop_list ? 'Remove Stop' : 'Add Stop'}
+                          </button>
+                          <button
+                            onClick={() => deleteMenuItem(item.id)}
+                            className="touch-button px-2 py-1 rounded text-xs bg-red-500 text-white hover:bg-red-600"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Orders Tab */}
+        {activeTab === "orders" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">All Orders</h2>
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div key={order.id} className="bg-white p-6 rounded-lg shadow-md">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Table {order.table_number}</h3>
+                      <p className="text-sm text-gray-600">Waitress: {order.waitress_name}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(order.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">${order.total_amount.toFixed(2)}</div>
+                    </div>
+                  </div>
+                  
+                  {order.clients.map((client, index) => (
+                    <div key={index} className="mb-4 p-3 border rounded">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-semibold">Client {client.client_number}</h4>
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          client.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          client.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                          client.status === 'preparing' ? 'bg-orange-100 text-orange-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {client.status}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        {client.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="flex justify-between text-sm">
+                            <span>{item.quantity}x {item.menu_item_name}</span>
+                            <span>${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="font-semibold text-right mt-2">
+                        Subtotal: ${client.subtotal.toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

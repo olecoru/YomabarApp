@@ -959,7 +959,11 @@ class EnhancedRestaurantTester:
         
         # Run tests in logical order
         self.test_authentication_system()
-        self.test_enhanced_menu_management()
+        self.test_dynamic_categories_management()
+        self.test_enhanced_user_management()
+        self.test_enhanced_menu_system()
+        self.test_enhanced_dashboard()
+        self.test_role_based_access_restrictions()
         self.test_enhanced_order_management()
         self.test_additional_features()
         self.test_complete_workflow()

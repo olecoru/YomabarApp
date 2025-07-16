@@ -434,7 +434,15 @@ async def delete_category(category_id: str, current_user: User = Depends(require
 async def get_users(current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
     """Get all users (admin only)"""
     users = await db.users.find().sort("created_at", -1).to_list(1000)
-    return [UserResponse(**user) for user in users]
+    
+    # Handle missing updated_at field for backward compatibility
+    result = []
+    for user in users:
+        if "updated_at" not in user:
+            user["updated_at"] = user.get("created_at", datetime.utcnow())
+        result.append(UserResponse(**user))
+    
+    return result
 
 @api_router.post("/users", response_model=UserResponse)
 async def create_user(user_data: UserCreate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):

@@ -256,6 +256,11 @@ class EnhancedRestaurantTester:
                 food_items = [item for item in self.menu_items if item["item_type"] == "food"][:2]
                 drink_items = [item for item in self.menu_items if item["item_type"] == "drink"][:2]
                 
+                # Check if we have enough items to create an order
+                if not food_items or not drink_items:
+                    self.log_test("POST /api/orders (waitress - multiple clients)", False, "Insufficient menu items for order test")
+                    return
+                
                 clients = [
                     {
                         "client_number": 1,

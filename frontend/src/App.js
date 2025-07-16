@@ -355,8 +355,11 @@ const WaitressInterface = () => {
               <div className="lg:col-span-2">
                 {Object.entries(groupedMenu).map(([category, items]) => (
                   <div key={category} className="mb-6">
-                    <h3 className="text-lg font-semibold mb-3 text-gray-800 border-b pb-2">
-                      {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800 border-b-2 border-orange-400 pb-2 flex items-center">
+                      <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm mr-3">
+                        {items.length} items
+                      </span>
+                      {categoryDisplayNames[category] || category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {items.map((item) => (

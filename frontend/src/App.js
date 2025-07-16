@@ -581,6 +581,8 @@ const WaitressInterface = () => {
               ))}
             </div>
           </div>
+        )}
+        
         {/* Menu Tab */}
         {activeTab === "menu" && (
           <div>

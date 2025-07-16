@@ -19,8 +19,11 @@ class EnhancedRestaurantTester:
         self.test_results = []
         self.tokens = {}  # Store tokens for different users
         self.menu_items = []
+        self.categories = []
         self.created_order_id = None
         self.created_menu_item_id = None
+        self.created_category_id = None
+        self.created_user_id = None
         
     def log_test(self, test_name, success, message, response_data=None):
         """Log test results"""

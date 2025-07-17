@@ -790,27 +790,19 @@ async def get_kitchen_orders(current_user: User = Depends(require_role([UserRole
     
     return kitchen_orders
 
-@api_router.get("/orders/bar", response_model=List[Order])
+@api_router.get("/orders/bar")
 async def get_bar_orders(current_user: User = Depends(require_role([UserRole.BARTENDER, UserRole.ADMINISTRATOR]))):
-    """Get orders with drink items for bartender"""
-    orders = await db.orders.find().sort("created_at", -1).to_list(1000)
+    """Get orders with drink items for bar"""
+    orders = await db.orders.find({"status": {"$in": ["pending", "confirmed", "preparing"]}}).sort("created_at", 1).to_list(1000)
     
-    # Filter orders to show only those with drink items
     bar_orders = []
     for order in orders:
-        order_obj = Order(**order)
-        # Filter clients to show only those with drink items
-        filtered_clients = []
-        for client in order_obj.clients:
-            drink_items = [item for item in client.items if item.item_type == ItemType.DRINK]
-            if drink_items:
-                filtered_client = client.copy()
-                filtered_client.items = drink_items
-                filtered_clients.append(filtered_client)
-        
-        if filtered_clients:
-            order_obj.clients = filtered_clients
-            bar_orders.append(order_obj)
+        # Filter items to show only drink items
+        drink_items = [item for item in order.get("items", []) if item.get("item_type") == "drink"]
+        if drink_items:
+            bar_order = order.copy()
+            bar_order["items"] = drink_items
+            bar_orders.append(bar_order)
     
     return bar_orders
 

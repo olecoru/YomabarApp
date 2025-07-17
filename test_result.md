@@ -356,11 +356,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Menu Management API Endpoints"
-    - "Department-Based Order Filtering"
-    - "Enhanced Categories with Department Support"
-    - "Multi-Client Order System"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

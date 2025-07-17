@@ -95,52 +95,26 @@ class EnhancedRestaurantTester:
                 
         # Note: User registration is handled through /api/users endpoint, not /api/auth/register
                 
-    def test_enhanced_menu_management(self):
-        """Test enhanced menu management endpoints"""
-        print("\n=== TESTING ENHANCED MENU MANAGEMENT ===")
+    def test_menu_management_api_endpoints(self):
+        """Test Menu Management API Endpoints - PRIORITY TASK"""
+        print("\n=== TESTING MENU MANAGEMENT API ENDPOINTS (PRIORITY) ===")
         
-        # Test 1: GET /api/menu (authenticated users, available items only)
-        if "waitress" in self.tokens:
-            try:
-                self.set_auth_header("waitress")
-                response = self.session.get(f"{BACKEND_URL}/menu")
-                
-                if response.status_code == 200:
-                    menu_data = response.json()
-                    self.menu_items = menu_data
-                    available_items = [item for item in menu_data if item.get("available", True) and not item.get("on_stop_list", False)]
-                    if len(available_items) == len(menu_data):
-                        self.log_test("GET /api/menu (waitress)", True, f"Retrieved {len(menu_data)} available menu items")
-                    else:
-                        self.log_test("GET /api/menu (waitress)", False, "Response includes unavailable or stop-listed items")
-                else:
-                    self.log_test("GET /api/menu (waitress)", False, f"HTTP {response.status_code}: {response.text}")
-            except Exception as e:
-                self.log_test("GET /api/menu (waitress)", False, f"Request failed: {str(e)}")
-                
-        # Test 2: GET /api/menu/all (admin only - all items including disabled)
+        # First get categories to use valid category_id
         if "administrator" in self.tokens:
-            try:
-                self.set_auth_header("administrator")
-                response = self.session.get(f"{BACKEND_URL}/menu/all")
-                
-                if response.status_code == 200:
-                    all_menu_data = response.json()
-                    self.log_test("GET /api/menu/all (admin)", True, f"Retrieved {len(all_menu_data)} total menu items (including disabled)")
-                else:
-                    self.log_test("GET /api/menu/all (admin)", False, f"HTTP {response.status_code}: {response.text}")
-            except Exception as e:
-                self.log_test("GET /api/menu/all (admin)", False, f"Request failed: {str(e)}")
-                
-        # Test 3: POST /api/menu (admin only - create new menu item)
-        if "administrator" in self.tokens:
+            self.set_auth_header("administrator")
+            categories_response = self.session.get(f"{BACKEND_URL}/categories")
+            if categories_response.status_code == 200:
+                self.categories = categories_response.json()
+        
+        # Test 1: POST /api/menu (admin only - create new menu item)
+        if "administrator" in self.tokens and self.categories:
             try:
                 self.set_auth_header("administrator")
                 new_item_data = {
-                    "name": "Test Pasta",
+                    "name": "Test Pasta Dish",
                     "description": "Delicious test pasta with marinara sauce",
                     "price": 16.99,
-                    "category": "main_dishes",
+                    "category_id": self.categories[0]["id"],  # Use valid category_id
                     "item_type": "food"
                 }
                 response = self.session.post(f"{BACKEND_URL}/menu", json=new_item_data)
@@ -149,53 +123,111 @@ class EnhancedRestaurantTester:
                     created_item = response.json()
                     self.created_menu_item_id = created_item["id"]
                     if created_item["name"] == new_item_data["name"]:
-                        self.log_test("POST /api/menu (admin)", True, f"Successfully created menu item: {created_item['name']}")
+                        self.log_test("POST /api/menu (admin only)", True, f"Successfully created menu item: {created_item['name']}")
                     else:
-                        self.log_test("POST /api/menu (admin)", False, "Created item data doesn't match input")
+                        self.log_test("POST /api/menu (admin only)", False, "Created item data doesn't match input")
                 else:
-                    self.log_test("POST /api/menu (admin)", False, f"HTTP {response.status_code}: {response.text}")
+                    self.log_test("POST /api/menu (admin only)", False, f"HTTP {response.status_code}: {response.text}")
             except Exception as e:
-                self.log_test("POST /api/menu (admin)", False, f"Request failed: {str(e)}")
+                self.log_test("POST /api/menu (admin only)", False, f"Request failed: {str(e)}")
                 
-        # Test 4: PUT /api/menu/{item_id} (admin only - update menu item, test stop list)
+        # Test 2: PUT /api/menu/{item_id} (admin only - update menu item)
         if "administrator" in self.tokens and self.created_menu_item_id:
             try:
                 self.set_auth_header("administrator")
                 update_data = {
-                    "on_stop_list": True,
-                    "available": False
+                    "name": "Updated Test Pasta",
+                    "price": 18.99,
+                    "available": True
                 }
                 response = self.session.put(f"{BACKEND_URL}/menu/{self.created_menu_item_id}", json=update_data)
                 
                 if response.status_code == 200:
                     updated_item = response.json()
-                    if updated_item["on_stop_list"] and not updated_item["available"]:
-                        self.log_test("PUT /api/menu/{item_id} (admin - stop list)", True, "Successfully updated item to stop list")
+                    if updated_item["name"] == update_data["name"] and updated_item["price"] == update_data["price"]:
+                        self.log_test("PUT /api/menu/{item_id} (admin only)", True, "Successfully updated menu item")
                     else:
-                        self.log_test("PUT /api/menu/{item_id} (admin - stop list)", False, "Stop list update failed")
+                        self.log_test("PUT /api/menu/{item_id} (admin only)", False, "Menu item update failed")
                 else:
-                    self.log_test("PUT /api/menu/{item_id} (admin - stop list)", False, f"HTTP {response.status_code}: {response.text}")
+                    self.log_test("PUT /api/menu/{item_id} (admin only)", False, f"HTTP {response.status_code}: {response.text}")
             except Exception as e:
-                self.log_test("PUT /api/menu/{item_id} (admin - stop list)", False, f"Request failed: {str(e)}")
+                self.log_test("PUT /api/menu/{item_id} (admin only)", False, f"Request failed: {str(e)}")
                 
-        # Test 5: GET /api/menu/type/{item_type} (test with food/drink types)
-        item_types = ["food", "drink"]
-        for item_type in item_types:
-            if "waitress" in self.tokens:
-                try:
-                    self.set_auth_header("waitress")
-                    response = self.session.get(f"{BACKEND_URL}/menu/type/{item_type}")
-                    
-                    if response.status_code == 200:
-                        type_items = response.json()
-                        if all(item["item_type"] == item_type for item in type_items):
-                            self.log_test(f"GET /api/menu/type/{item_type}", True, f"Retrieved {len(type_items)} {item_type} items")
-                        else:
-                            self.log_test(f"GET /api/menu/type/{item_type}", False, f"Some items don't match {item_type} type")
+        # Test 3: DELETE /api/menu/{item_id} (admin only - delete menu item)
+        if "administrator" in self.tokens and self.created_menu_item_id:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.delete(f"{BACKEND_URL}/menu/{self.created_menu_item_id}")
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if "message" in result and "deleted" in result["message"].lower():
+                        self.log_test("DELETE /api/menu/{item_id} (admin only)", True, "Successfully deleted menu item")
                     else:
-                        self.log_test(f"GET /api/menu/type/{item_type}", False, f"HTTP {response.status_code}: {response.text}")
-                except Exception as e:
-                    self.log_test(f"GET /api/menu/type/{item_type}", False, f"Request failed: {str(e)}")
+                        self.log_test("DELETE /api/menu/{item_id} (admin only)", False, "Unexpected delete response")
+                else:
+                    self.log_test("DELETE /api/menu/{item_id} (admin only)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("DELETE /api/menu/{item_id} (admin only)", False, f"Request failed: {str(e)}")
+                
+        # Test 4: Role-based access control - waitress should NOT be able to create menu items
+        if "waitress" in self.tokens and self.categories:
+            try:
+                self.set_auth_header("waitress")
+                new_item_data = {
+                    "name": "Unauthorized Item",
+                    "description": "This should fail",
+                    "price": 10.99,
+                    "category_id": self.categories[0]["id"],
+                    "item_type": "food"
+                }
+                response = self.session.post(f"{BACKEND_URL}/menu", json=new_item_data)
+                
+                if response.status_code == 403:
+                    self.log_test("POST /api/menu (waitress - should fail)", True, "Correctly denied access for non-admin user")
+                else:
+                    self.log_test("POST /api/menu (waitress - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("POST /api/menu (waitress - should fail)", False, f"Request failed: {str(e)}")
+                
+        # Test 5: Kitchen staff should NOT be able to update menu items
+        if "kitchen" in self.tokens:
+            try:
+                self.set_auth_header("kitchen")
+                # Try to update any existing menu item
+                menu_response = self.session.get(f"{BACKEND_URL}/menu")
+                if menu_response.status_code == 200:
+                    menu_items = menu_response.json()
+                    if menu_items:
+                        item_id = menu_items[0]["id"]
+                        update_data = {"price": 999.99}
+                        response = self.session.put(f"{BACKEND_URL}/menu/{item_id}", json=update_data)
+                        
+                        if response.status_code == 403:
+                            self.log_test("PUT /api/menu/{item_id} (kitchen - should fail)", True, "Correctly denied access for kitchen staff")
+                        else:
+                            self.log_test("PUT /api/menu/{item_id} (kitchen - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("PUT /api/menu/{item_id} (kitchen - should fail)", False, f"Request failed: {str(e)}")
+                
+        # Test 6: Bartender should NOT be able to delete menu items
+        if "bartender" in self.tokens:
+            try:
+                self.set_auth_header("bartender")
+                # Try to delete any existing menu item
+                menu_response = self.session.get(f"{BACKEND_URL}/menu")
+                if menu_response.status_code == 200:
+                    menu_items = menu_response.json()
+                    if menu_items:
+                        item_id = menu_items[0]["id"]
+                        response = self.session.delete(f"{BACKEND_URL}/menu/{item_id}")
+                        
+                        if response.status_code == 403:
+                            self.log_test("DELETE /api/menu/{item_id} (bartender - should fail)", True, "Correctly denied access for bartender")
+                        else:
+                            self.log_test("DELETE /api/menu/{item_id} (bartender - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("DELETE /api/menu/{item_id} (bartender - should fail)", False, f"Request failed: {str(e)}")
                     
     def test_enhanced_order_management(self):
         """Test enhanced order management with multiple clients per table"""

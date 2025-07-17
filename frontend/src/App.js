@@ -1447,9 +1447,10 @@ const KitchenInterface = () => {
   const fetchKitchenOrders = async () => {
     try {
       const response = await axios.get(`${API}/orders/kitchen`);
-      setOrders(response.data);
+      setOrders(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Ошибка загрузки заказов кухни:", error);
+      setOrders([]);
     }
   };
 
@@ -1521,12 +1522,12 @@ const KitchenInterface = () => {
                 </div>
 
                 <div className="space-y-3 mb-4">
-                  {order.items.map((item, index) => (
+                  {(order.items || []).map((item, index) => (
                     <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                       <div className="flex items-center">
-                        <span className="text-lg mr-2">{item.category_emoji}</span>
+                        <span className="text-lg mr-2">{item.category_emoji || '🍽️'}</span>
                         <div>
-                          <p className="font-medium">{item.name}</p>
+                          <p className="font-medium">{item.name || item.menu_item_name}</p>
                           <p className="text-sm text-gray-600">{item.category_name}</p>
                         </div>
                       </div>
@@ -1591,9 +1592,10 @@ const BarInterface = () => {
   const fetchBarOrders = async () => {
     try {
       const response = await axios.get(`${API}/orders/bar`);
-      setOrders(response.data);
+      setOrders(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Ошибка загрузки заказов бара:", error);
+      setOrders([]);
     }
   };
 
@@ -1665,12 +1667,12 @@ const BarInterface = () => {
                 </div>
 
                 <div className="space-y-3 mb-4">
-                  {order.items.map((item, index) => (
+                  {(order.items || []).map((item, index) => (
                     <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                       <div className="flex items-center">
-                        <span className="text-lg mr-2">{item.category_emoji}</span>
+                        <span className="text-lg mr-2">{item.category_emoji || '🍹'}</span>
                         <div>
-                          <p className="font-medium">{item.name}</p>
+                          <p className="font-medium">{item.name || item.menu_item_name}</p>
                           <p className="text-sm text-gray-600">{item.category_name}</p>
                         </div>
                       </div>

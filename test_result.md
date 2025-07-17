@@ -257,15 +257,18 @@ backend:
 
   - task: "Department-Based Order Filtering"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added department-specific order endpoints: GET /api/orders/kitchen (returns orders with kitchen items only), GET /api/orders/bar (returns orders with bar items only). Orders are filtered based on category department field. Role-based access ensures kitchen staff see only kitchen orders, bar staff see only bar orders."
+      - working: true
+        agent: "testing"
+        comment: "✅ DEPARTMENT-BASED ORDER FILTERING FULLY WORKING: GET /api/orders/kitchen correctly returns orders with food items only for kitchen staff. GET /api/orders/bar properly returns orders with drink items only for bartender. Admin has access to both kitchen and bar orders. Role-based access control working perfectly - waitress denied access to both endpoints (403), kitchen staff denied bar access (403), bartender denied kitchen access (403). Order filtering by item_type working correctly with proper department separation."
 
   - task: "Enhanced Categories with Department Support"
     implemented: true

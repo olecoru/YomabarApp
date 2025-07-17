@@ -345,11 +345,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Dynamic Categories Management"
-    - "Enhanced User Management"
-    - "Enhanced Menu System with Dynamic Categories"
-    - "Enhanced Dashboard with Admin Stats"
-    - "Authentication and Authorization System"
+    - "Menu Management API Endpoints"
+    - "Department-Based Order Filtering"
+    - "Enhanced Categories with Department Support"
+    - "Multi-Client Order System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

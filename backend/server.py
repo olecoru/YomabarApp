@@ -280,10 +280,11 @@ async def init_default_data():
     
     # Create default categories if they don't exist
     default_categories = [
-        {"name": "appetizers", "display_name": "Appetizers", "emoji": "🥗", "description": "Starters and small plates", "sort_order": 1},
-        {"name": "main_dishes", "display_name": "Main Dishes", "emoji": "🍽️", "description": "Main course items", "sort_order": 2},
-        {"name": "desserts", "display_name": "Desserts", "emoji": "🍰", "description": "Sweet treats and desserts", "sort_order": 3},
-        {"name": "beverages", "display_name": "Beverages", "emoji": "🥤", "description": "Drinks and beverages", "sort_order": 4}
+        {"name": "appetizers", "display_name": "Закуски", "emoji": "🥗", "description": "Стартеры и небольшие блюда", "department": "kitchen", "sort_order": 1},
+        {"name": "main_dishes", "display_name": "Основные блюда", "emoji": "🍽️", "description": "Главные блюда", "department": "kitchen", "sort_order": 2},
+        {"name": "desserts", "display_name": "Десерты", "emoji": "🍰", "description": "Сладости и десерты", "department": "kitchen", "sort_order": 3},
+        {"name": "beverages", "display_name": "Напитки", "emoji": "🥤", "description": "Напитки и коктейли", "department": "bar", "sort_order": 4},
+        {"name": "cocktails", "display_name": "Коктейли", "emoji": "🍹", "description": "Алкогольные коктейли", "department": "bar", "sort_order": 5}
     ]
     
     category_mapping = {}

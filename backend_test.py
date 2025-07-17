@@ -228,6 +228,193 @@ class EnhancedRestaurantTester:
                             self.log_test("DELETE /api/menu/{item_id} (bartender - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
             except Exception as e:
                 self.log_test("DELETE /api/menu/{item_id} (bartender - should fail)", False, f"Request failed: {str(e)}")
+                
+    def test_department_based_order_filtering(self):
+        """Test Department-Based Order Filtering - PRIORITY TASK"""
+        print("\n=== TESTING DEPARTMENT-BASED ORDER FILTERING (PRIORITY) ===")
+        
+        # First create an order with both food and drink items to test filtering
+        if "waitress" in self.tokens and self.menu_items:
+            try:
+                self.set_auth_header("waitress")
+                
+                # Get food and drink items
+                food_items = [item for item in self.menu_items if item["item_type"] == "food"][:2]
+                drink_items = [item for item in self.menu_items if item["item_type"] == "drink"][:2]
+                
+                if food_items and drink_items:
+                    # Create order with both food and drink items
+                    clients = [
+                        {
+                            "client_number": 1,
+                            "items": [
+                                {
+                                    "menu_item_id": food_items[0]["id"],
+                                    "menu_item_name": food_items[0]["name"],
+                                    "quantity": 1,
+                                    "price": food_items[0]["price"],
+                                    "item_type": food_items[0]["item_type"]
+                                },
+                                {
+                                    "menu_item_id": drink_items[0]["id"],
+                                    "menu_item_name": drink_items[0]["name"],
+                                    "quantity": 1,
+                                    "price": drink_items[0]["price"],
+                                    "item_type": drink_items[0]["item_type"]
+                                }
+                            ],
+                            "subtotal": food_items[0]["price"] + drink_items[0]["price"]
+                        }
+                    ]
+                    
+                    order_data = {
+                        "table_number": 10,
+                        "clients": clients,
+                        "special_notes": "Test order for department filtering"
+                    }
+                    
+                    response = self.session.post(f"{BACKEND_URL}/orders", json=order_data)
+                    if response.status_code == 200:
+                        self.created_order_id = response.json()["id"]
+                        self.log_test("Setup order for department filtering", True, "Created test order with food and drink items")
+            except Exception as e:
+                self.log_test("Setup order for department filtering", False, f"Failed to create test order: {str(e)}")
+        
+        # Test 1: GET /api/orders/kitchen (kitchen staff only - food items only)
+        if "kitchen" in self.tokens:
+            try:
+                self.set_auth_header("kitchen")
+                response = self.session.get(f"{BACKEND_URL}/orders/kitchen")
+                
+                if response.status_code == 200:
+                    kitchen_orders = response.json()
+                    
+                    # Verify all items are food items
+                    all_food_items = True
+                    total_items = 0
+                    for order in kitchen_orders:
+                        for client in order.get("clients", []):
+                            for item in client.get("items", []):
+                                total_items += 1
+                                if item.get("item_type") != "food":
+                                    all_food_items = False
+                                    break
+                    
+                    if all_food_items and total_items > 0:
+                        self.log_test("GET /api/orders/kitchen (kitchen staff)", True, f"Retrieved {len(kitchen_orders)} orders with {total_items} food items only")
+                    elif total_items == 0:
+                        self.log_test("GET /api/orders/kitchen (kitchen staff)", True, "No kitchen orders found (expected if no food orders exist)")
+                    else:
+                        self.log_test("GET /api/orders/kitchen (kitchen staff)", False, "Kitchen orders contain non-food items")
+                else:
+                    self.log_test("GET /api/orders/kitchen (kitchen staff)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/orders/kitchen (kitchen staff)", False, f"Request failed: {str(e)}")
+                
+        # Test 2: GET /api/orders/bar (bartender only - drink items only)
+        if "bartender" in self.tokens:
+            try:
+                self.set_auth_header("bartender")
+                response = self.session.get(f"{BACKEND_URL}/orders/bar")
+                
+                if response.status_code == 200:
+                    bar_orders = response.json()
+                    
+                    # Verify all items are drink items
+                    all_drink_items = True
+                    total_items = 0
+                    for order in bar_orders:
+                        for client in order.get("clients", []):
+                            for item in client.get("items", []):
+                                total_items += 1
+                                if item.get("item_type") != "drink":
+                                    all_drink_items = False
+                                    break
+                    
+                    if all_drink_items and total_items > 0:
+                        self.log_test("GET /api/orders/bar (bartender)", True, f"Retrieved {len(bar_orders)} orders with {total_items} drink items only")
+                    elif total_items == 0:
+                        self.log_test("GET /api/orders/bar (bartender)", True, "No bar orders found (expected if no drink orders exist)")
+                    else:
+                        self.log_test("GET /api/orders/bar (bartender)", False, "Bar orders contain non-drink items")
+                else:
+                    self.log_test("GET /api/orders/bar (bartender)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/orders/bar (bartender)", False, f"Request failed: {str(e)}")
+                
+        # Test 3: Admin should have access to both kitchen and bar orders
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                
+                # Test kitchen orders access for admin
+                kitchen_response = self.session.get(f"{BACKEND_URL}/orders/kitchen")
+                if kitchen_response.status_code == 200:
+                    self.log_test("GET /api/orders/kitchen (admin)", True, "Admin has access to kitchen orders")
+                else:
+                    self.log_test("GET /api/orders/kitchen (admin)", False, f"Admin denied kitchen access: HTTP {kitchen_response.status_code}")
+                
+                # Test bar orders access for admin
+                bar_response = self.session.get(f"{BACKEND_URL}/orders/bar")
+                if bar_response.status_code == 200:
+                    self.log_test("GET /api/orders/bar (admin)", True, "Admin has access to bar orders")
+                else:
+                    self.log_test("GET /api/orders/bar (admin)", False, f"Admin denied bar access: HTTP {bar_response.status_code}")
+                    
+            except Exception as e:
+                self.log_test("Admin department access", False, f"Request failed: {str(e)}")
+                
+        # Test 4: Role-based access control - waitress should NOT have access to kitchen orders
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/orders/kitchen")
+                
+                if response.status_code == 403:
+                    self.log_test("GET /api/orders/kitchen (waitress - should fail)", True, "Correctly denied kitchen access for waitress")
+                else:
+                    self.log_test("GET /api/orders/kitchen (waitress - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("GET /api/orders/kitchen (waitress - should fail)", False, f"Request failed: {str(e)}")
+                
+        # Test 5: Role-based access control - waitress should NOT have access to bar orders
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/orders/bar")
+                
+                if response.status_code == 403:
+                    self.log_test("GET /api/orders/bar (waitress - should fail)", True, "Correctly denied bar access for waitress")
+                else:
+                    self.log_test("GET /api/orders/bar (waitress - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("GET /api/orders/bar (waitress - should fail)", False, f"Request failed: {str(e)}")
+                
+        # Test 6: Kitchen staff should NOT have access to bar orders
+        if "kitchen" in self.tokens:
+            try:
+                self.set_auth_header("kitchen")
+                response = self.session.get(f"{BACKEND_URL}/orders/bar")
+                
+                if response.status_code == 403:
+                    self.log_test("GET /api/orders/bar (kitchen - should fail)", True, "Correctly denied bar access for kitchen staff")
+                else:
+                    self.log_test("GET /api/orders/bar (kitchen - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("GET /api/orders/bar (kitchen - should fail)", False, f"Request failed: {str(e)}")
+                
+        # Test 7: Bartender should NOT have access to kitchen orders
+        if "bartender" in self.tokens:
+            try:
+                self.set_auth_header("bartender")
+                response = self.session.get(f"{BACKEND_URL}/orders/kitchen")
+                
+                if response.status_code == 403:
+                    self.log_test("GET /api/orders/kitchen (bartender - should fail)", True, "Correctly denied kitchen access for bartender")
+                else:
+                    self.log_test("GET /api/orders/kitchen (bartender - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("GET /api/orders/kitchen (bartender - should fail)", False, f"Request failed: {str(e)}")
                     
     def test_enhanced_order_management(self):
         """Test enhanced order management with multiple clients per table"""

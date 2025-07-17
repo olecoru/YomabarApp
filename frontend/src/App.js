@@ -217,12 +217,11 @@ const WaitressInterface = () => {
   const { user } = React.useContext(AuthContext);
   const [activeStep, setActiveStep] = useState("welcome");
   const [selectedTable, setSelectedTable] = useState(null);
+  const [teamName, setTeamName] = useState("");
   const [clients, setClients] = useState([]);
   const [activeClient, setActiveClient] = useState(null);
   const [menu, setMenu] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [order, setOrder] = useState([]);
-  const [customerName, setCustomerName] = useState("");
   const [loading, setLoading] = useState(false);
   const [welcomePhrase, setWelcomePhrase] = useState("");
   const [completionPhrase, setCompletionPhrase] = useState("");
@@ -255,63 +254,156 @@ const WaitressInterface = () => {
 
   const filteredMenu = selectedCategory === "all" ? menu : menu.filter(item => item.category_id === selectedCategory);
 
-  const addToOrder = (menuItem) => {
-    const existingItem = order.find(item => item.id === menuItem.id);
-    if (existingItem) {
-      setOrder(order.map(item => 
-        item.id === menuItem.id 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
-    } else {
-      setOrder([...order, { ...menuItem, quantity: 1 }]);
+  const addClient = () => {
+    const newClient = {
+      id: Date.now(),
+      name: `Клиент ${clients.length + 1}`,
+      order: []
+    };
+    setClients([...clients, newClient]);
+    setActiveClient(newClient.id);
+  };
+
+  const removeClient = (clientId) => {
+    const updatedClients = clients.filter(client => client.id !== clientId);
+    setClients(updatedClients);
+    if (activeClient === clientId) {
+      setActiveClient(updatedClients.length > 0 ? updatedClients[0].id : null);
     }
+  };
+
+  const updateClientName = (clientId, newName) => {
+    setClients(clients.map(client => 
+      client.id === clientId ? { ...client, name: newName } : client
+    ));
+  };
+
+  const getCurrentClient = () => {
+    return clients.find(client => client.id === activeClient);
+  };
+
+  const addToOrder = (menuItem) => {
+    if (!activeClient) return;
+    
+    setClients(clients.map(client => {
+      if (client.id === activeClient) {
+        const existingItem = client.order.find(item => item.id === menuItem.id);
+        if (existingItem) {
+          return {
+            ...client,
+            order: client.order.map(item => 
+              item.id === menuItem.id 
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            )
+          };
+        } else {
+          return {
+            ...client,
+            order: [...client.order, { ...menuItem, quantity: 1 }]
+          };
+        }
+      }
+      return client;
+    }));
   };
 
   const removeFromOrder = (menuItemId) => {
-    setOrder(order.filter(item => item.id !== menuItemId));
+    if (!activeClient) return;
+    
+    setClients(clients.map(client => {
+      if (client.id === activeClient) {
+        return {
+          ...client,
+          order: client.order.filter(item => item.id !== menuItemId)
+        };
+      }
+      return client;
+    }));
   };
 
   const updateQuantity = (menuItemId, quantity) => {
+    if (!activeClient) return;
+    
     if (quantity <= 0) {
       removeFromOrder(menuItemId);
     } else {
-      setOrder(order.map(item => 
-        item.id === menuItemId 
-          ? { ...item, quantity: quantity }
-          : item
-      ));
+      setClients(clients.map(client => {
+        if (client.id === activeClient) {
+          return {
+            ...client,
+            order: client.order.map(item => 
+              item.id === menuItemId 
+                ? { ...item, quantity: quantity }
+                : item
+            )
+          };
+        }
+        return client;
+      }));
     }
   };
 
-  const calculateTotal = () => {
-    return order.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const calculateClientTotal = (clientId) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return 0;
+    return client.order.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const calculateGrandTotal = () => {
+    return clients.reduce((total, client) => total + calculateClientTotal(client.id), 0);
+  };
+
+  const getTotalItemsCount = () => {
+    return clients.reduce((total, client) => 
+      total + client.order.reduce((clientTotal, item) => clientTotal + item.quantity, 0), 0
+    );
   };
 
   const submitOrder = async () => {
-    if (!customerName.trim()) {
-      alert("Пожалуйста, введите имя клиента");
+    if (clients.length === 0) {
+      alert("Добавьте хотя бы одного клиента");
       return;
     }
 
-    if (order.length === 0) {
+    const hasItems = clients.some(client => client.order.length > 0);
+    if (!hasItems) {
       alert("Добавьте блюда в заказ");
       return;
     }
 
     setLoading(true);
     try {
+      // Создаем один заказ для всего стола
+      const allItems = [];
+      let orderNotes = `Стол: ${selectedTable}`;
+      if (teamName.trim()) {
+        orderNotes += ` | Команда: ${teamName}`;
+      }
+      orderNotes += "\n\nРаспределение по клиентам:\n";
+
+      clients.forEach(client => {
+        if (client.order.length > 0) {
+          orderNotes += `${client.name}:\n`;
+          client.order.forEach(item => {
+            allItems.push({
+              menu_item_id: item.id,
+              quantity: item.quantity,
+              price: item.price
+            });
+            orderNotes += `  - ${item.name} x${item.quantity} ($${(item.price * item.quantity).toFixed(2)})\n`;
+          });
+          orderNotes += `  Итого: $${calculateClientTotal(client.id).toFixed(2)}\n\n`;
+        }
+      });
+
       const orderData = {
-        customer_name: customerName,
+        customer_name: teamName.trim() || `Стол ${selectedTable}`,
         table_number: selectedTable,
-        items: order.map(item => ({
-          menu_item_id: item.id,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        total: calculateTotal(),
+        items: allItems,
+        total: calculateGrandTotal(),
         status: "pending",
-        notes: `Клиент: ${customerName} | Стол: ${selectedTable}`
+        notes: orderNotes
       };
 
       await axios.post(`${API}/orders`, orderData);
@@ -319,9 +411,10 @@ const WaitressInterface = () => {
       // Показать фразу-похвалу
       setCompletionPhrase(getRandomPhrase(COMPLETION_PHRASES));
       
-      // Очистить заказ
-      setOrder([]);
-      setCustomerName("");
+      // Очистить данные
+      setClients([]);
+      setActiveClient(null);
+      setTeamName("");
       
       // Показать экран успеха
       setActiveStep("success");
@@ -334,8 +427,9 @@ const WaitressInterface = () => {
   };
 
   const startNewOrder = () => {
-    setOrder([]);
-    setCustomerName("");
+    setClients([]);
+    setActiveClient(null);
+    setTeamName("");
     setActiveStep("table");
   };
 
@@ -458,6 +552,8 @@ const WaitressInterface = () => {
 
   // Интерфейс создания заказа
   if (activeStep === "order") {
+    const currentClient = getCurrentClient();
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
         <div className="max-w-6xl mx-auto p-4">
@@ -466,11 +562,18 @@ const WaitressInterface = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <h1 className="text-2xl font-bold text-red-600">YomaBar</h1>
-                  <p className="text-gray-600">Стол {selectedTable} | {user.full_name}</p>
+                  <p className="text-gray-600">
+                    Стол {selectedTable} | {user.full_name}
+                    {teamName && (
+                      <span className="ml-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                        {teamName}
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-500">Заказ</p>
-                  <p className="text-lg font-semibold">{order.length} блюд</p>
+                  <p className="text-lg font-semibold">{getTotalItemsCount()} позиций</p>
                 </div>
               </div>
             </div>
@@ -480,15 +583,65 @@ const WaitressInterface = () => {
                 <div className="lg:col-span-2">
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Имя клиента
+                      Название команды (необязательно)
                     </label>
                     <input
                       type="text"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
+                      value={teamName}
+                      onChange={(e) => setTeamName(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      placeholder="Введите имя клиента"
+                      placeholder="Введите название команды для квиза"
                     />
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Клиенты за столом
+                      </label>
+                      <button
+                        onClick={addClient}
+                        className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors"
+                      >
+                        + Добавить клиента
+                      </button>
+                    </div>
+                    
+                    {clients.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {clients.map(client => (
+                          <div
+                            key={client.id}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-colors ${
+                              activeClient === client.id
+                                ? 'border-red-500 bg-red-50'
+                                : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                            }`}
+                            onClick={() => setActiveClient(client.id)}
+                          >
+                            <input
+                              type="text"
+                              value={client.name}
+                              onChange={(e) => updateClientName(client.id, e.target.value)}
+                              className="bg-transparent border-none outline-none text-sm font-medium min-w-0"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <span className="text-xs text-gray-500">
+                              ({client.order.length})
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeClient(client.id);
+                              }}
+                              className="text-red-500 hover:text-red-700 ml-1"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mb-4">
@@ -536,7 +689,8 @@ const WaitressInterface = () => {
                           </span>
                           <button
                             onClick={() => addToOrder(item)}
-                            className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors"
+                            disabled={!activeClient}
+                            className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Добавить
                           </button>
@@ -548,13 +702,17 @@ const WaitressInterface = () => {
 
                 <div className="lg:col-span-1">
                   <div className="bg-gray-50 p-4 rounded-lg sticky top-4">
-                    <h3 className="font-semibold text-gray-900 mb-4">Заказ</h3>
+                    <h3 className="font-semibold text-gray-900 mb-4">
+                      Заказ{currentClient ? ` - ${currentClient.name}` : ''}
+                    </h3>
                     
-                    {order.length === 0 ? (
+                    {!activeClient ? (
+                      <p className="text-gray-500 text-sm">Выберите клиента для добавления блюд</p>
+                    ) : currentClient.order.length === 0 ? (
                       <p className="text-gray-500 text-sm">Заказ пуст</p>
                     ) : (
                       <div className="space-y-3 mb-4">
-                        {order.map(item => (
+                        {currentClient.order.map(item => (
                           <div key={item.id} className="flex justify-between items-center">
                             <div className="flex-1">
                               <p className="text-sm font-medium">{item.name}</p>
@@ -580,28 +738,40 @@ const WaitressInterface = () => {
                       </div>
                     )}
 
-                    <div className="border-t pt-4">
-                      <div className="flex justify-between items-center font-semibold text-lg mb-4">
-                        <span>Итого:</span>
-                        <span className="text-red-600">${calculateTotal().toFixed(2)}</span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <button
-                          onClick={submitOrder}
-                          disabled={loading || order.length === 0 || !customerName.trim()}
-                          className="w-full bg-red-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {loading ? "Отправка..." : "Отправить заказ"}
-                        </button>
+                    {clients.length > 0 && (
+                      <div className="border-t pt-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">Итого по клиентам:</h4>
+                        <div className="space-y-1 mb-4">
+                          {clients.map(client => (
+                            <div key={client.id} className="flex justify-between text-sm">
+                              <span>{client.name}:</span>
+                              <span className="font-medium">${calculateClientTotal(client.id).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
                         
-                        <button
-                          onClick={() => setActiveStep("table")}
-                          className="w-full bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
-                        >
-                          Сменить стол
-                        </button>
+                        <div className="flex justify-between items-center font-semibold text-lg mb-4 pt-2 border-t">
+                          <span>Общий итог:</span>
+                          <span className="text-red-600">${calculateGrandTotal().toFixed(2)}</span>
+                        </div>
                       </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <button
+                        onClick={submitOrder}
+                        disabled={loading || clients.length === 0 || !clients.some(c => c.order.length > 0)}
+                        className="w-full bg-red-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? "Отправка..." : "Отправить заказ"}
+                      </button>
+                      
+                      <button
+                        onClick={() => setActiveStep("table")}
+                        className="w-full bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
+                      >
+                        Сменить стол
+                      </button>
                     </div>
                   </div>
                 </div>

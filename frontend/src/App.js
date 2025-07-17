@@ -1194,6 +1194,294 @@ const AdminInterface = () => {
   );
 };
 
+// Kitchen Interface
+const KitchenInterface = () => {
+  const { user } = React.useContext(AuthContext);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchKitchenOrders();
+    // Обновляем заказы каждые 30 секунд
+    const interval = setInterval(fetchKitchenOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchKitchenOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/orders/kitchen`);
+      setOrders(response.data);
+    } catch (error) {
+      console.error("Ошибка загрузки заказов кухни:", error);
+    }
+  };
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    setLoading(true);
+    try {
+      await axios.put(`${API}/orders/${orderId}`, { status: newStatus });
+      fetchKitchenOrders();
+    } catch (error) {
+      alert("Ошибка при обновлении статуса заказа");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'preparing': return 'bg-orange-100 text-orange-800';
+      case 'ready': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'Ожидание';
+      case 'confirmed': return 'Подтверждён';
+      case 'preparing': return 'Готовится';
+      case 'ready': return 'Готов';
+      default: return status;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="yoma-header mb-6">
+          <h1>YomaBar - Кухня</h1>
+          <p>{user.full_name} | Активных заказов: {orders.length}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {orders.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <div className="text-6xl mb-4">🍽️</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Нет активных заказов</h3>
+              <p className="text-gray-600">Все заказы обработаны!</p>
+            </div>
+          ) : (
+            orders.map(order => (
+              <div key={order.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-orange-500">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Стол {order.table_number}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {order.customer_name || `Заказ #${order.id.slice(-6)}`}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(order.created_at).toLocaleString('ru-RU')}
+                    </p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                    {getStatusText(order.status)}
+                  </span>
+                </div>
+
+                <div className="space-y-3 mb-4">
+                  {order.items.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <div className="flex items-center">
+                        <span className="text-lg mr-2">{item.category_emoji}</span>
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-gray-600">{item.category_name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-lg">×{item.quantity}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex space-x-2">
+                  {order.status === 'pending' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                      disabled={loading}
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Принять
+                    </button>
+                  )}
+                  {order.status === 'confirmed' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'preparing')}
+                      disabled={loading}
+                      className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 disabled:opacity-50"
+                    >
+                      Готовить
+                    </button>
+                  )}
+                  {order.status === 'preparing' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'ready')}
+                      disabled={loading}
+                      className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Готово
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Bar Interface
+const BarInterface = () => {
+  const { user } = React.useContext(AuthContext);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchBarOrders();
+    // Обновляем заказы каждые 30 секунд
+    const interval = setInterval(fetchBarOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchBarOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/orders/bar`);
+      setOrders(response.data);
+    } catch (error) {
+      console.error("Ошибка загрузки заказов бара:", error);
+    }
+  };
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    setLoading(true);
+    try {
+      await axios.put(`${API}/orders/${orderId}`, { status: newStatus });
+      fetchBarOrders();
+    } catch (error) {
+      alert("Ошибка при обновлении статуса заказа");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'preparing': return 'bg-orange-100 text-orange-800';
+      case 'ready': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'Ожидание';
+      case 'confirmed': return 'Подтверждён';
+      case 'preparing': return 'Готовится';
+      case 'ready': return 'Готов';
+      default: return status;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="yoma-header mb-6">
+          <h1>YomaBar - Бар</h1>
+          <p>{user.full_name} | Активных заказов: {orders.length}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {orders.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <div className="text-6xl mb-4">🍹</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Нет активных заказов</h3>
+              <p className="text-gray-600">Все напитки приготовлены!</p>
+            </div>
+          ) : (
+            orders.map(order => (
+              <div key={order.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Стол {order.table_number}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {order.customer_name || `Заказ #${order.id.slice(-6)}`}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(order.created_at).toLocaleString('ru-RU')}
+                    </p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                    {getStatusText(order.status)}
+                  </span>
+                </div>
+
+                <div className="space-y-3 mb-4">
+                  {order.items.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                      <div className="flex items-center">
+                        <span className="text-lg mr-2">{item.category_emoji}</span>
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-gray-600">{item.category_name}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-lg">×{item.quantity}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex space-x-2">
+                  {order.status === 'pending' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                      disabled={loading}
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Принять
+                    </button>
+                  )}
+                  {order.status === 'confirmed' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'preparing')}
+                      disabled={loading}
+                      className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 disabled:opacity-50"
+                    >
+                      Готовить
+                    </button>
+                  )}
+                  {order.status === 'preparing' && (
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'ready')}
+                      disabled={loading}
+                      className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Готово
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Simple interface for kitchen and bartender roles
 const SimpleInterface = ({ role }) => {
   const { user } = React.useContext(AuthContext);

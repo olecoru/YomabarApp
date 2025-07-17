@@ -42,7 +42,7 @@ const AuthProvider = ({ children }) => {
       setUser({ id: user_id, username, role, full_name });
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.detail || "Login failed" };
+      return { success: false, error: error.response?.data?.detail || "Ошибка входа" };
     }
   };
 
@@ -84,10 +84,10 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Restaurant Management System
+            Система Управления Рестораном
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Please sign in to your account
+            Пожалуйста, войдите в свою учетную запись
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -97,7 +97,7 @@ const Login = () => {
                 type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="Username"
+                placeholder="Имя пользователя"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -107,7 +107,7 @@ const Login = () => {
                 type="password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -124,18 +124,18 @@ const Login = () => {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Вход..." : "Войти"}
             </button>
           </div>
         </form>
         
         <div className="mt-6 text-center">
-          <h3 className="text-lg font-medium text-gray-900">Demo Accounts</h3>
+          <h3 className="text-lg font-medium text-gray-900">Демо Аккаунты</h3>
           <div className="mt-2 space-y-1 text-sm text-gray-600">
-            <p>Waitress: <code>waitress1</code> / <code>password123</code></p>
-            <p>Kitchen: <code>kitchen1</code> / <code>password123</code></p>
-            <p>Bartender: <code>bartender1</code> / <code>password123</code></p>
-            <p>Admin: <code>admin1</code> / <code>password123</code></p>
+            <p>Официант: <code>waitress1</code> / <code>password123</code></p>
+            <p>Кухня: <code>kitchen1</code> / <code>password123</code></p>
+            <p>Бармен: <code>bartender1</code> / <code>password123</code></p>
+            <p>Администратор: <code>admin1</code> / <code>password123</code></p>
           </div>
         </div>
       </div>
@@ -173,7 +173,7 @@ const AdminInterface = () => {
       const response = await axios.get(`${API}/categories/all`);
       setCategories(response.data);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      console.error("Ошибка загрузки категорий:", error);
     }
   };
 
@@ -182,7 +182,7 @@ const AdminInterface = () => {
       const response = await axios.get(`${API}/users`);
       setUsers(response.data);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Ошибка загрузки пользователей:", error);
     }
   };
 
@@ -191,13 +191,13 @@ const AdminInterface = () => {
       const response = await axios.get(`${API}/menu/all`);
       setMenu(response.data);
     } catch (error) {
-      console.error("Error fetching menu:", error);
+      console.error("Ошибка загрузки меню:", error);
     }
   };
 
   const addCategory = async () => {
     if (!newCategory.name || !newCategory.display_name || !newCategory.emoji) {
-      alert("Please fill in all required fields");
+      alert("Пожалуйста, заполните все обязательные поля");
       return;
     }
     
@@ -207,7 +207,7 @@ const AdminInterface = () => {
       setNewCategory({ name: "", display_name: "", emoji: "", description: "", sort_order: 1 });
       fetchCategories();
     } catch (error) {
-      alert("Error: " + (error.response?.data?.detail || "Failed to add category"));
+      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось добавить категорию"));
     } finally {
       setLoading(false);
     }
@@ -215,7 +215,7 @@ const AdminInterface = () => {
 
   const addUser = async () => {
     if (!newUser.username || !newUser.password || !newUser.full_name) {
-      alert("Please fill in all required fields");
+      alert("Пожалуйста, заполните все обязательные поля");
       return;
     }
     
@@ -225,32 +225,42 @@ const AdminInterface = () => {
       setNewUser({ username: "", password: "", role: "waitress", full_name: "", email: "", phone: "" });
       fetchUsers();
     } catch (error) {
-      alert("Error: " + (error.response?.data?.detail || "Failed to add user"));
+      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось добавить пользователя"));
     } finally {
       setLoading(false);
     }
   };
 
   const deleteCategory = async (categoryId) => {
-    if (window.confirm("Are you sure you want to delete this category?")) {
+    if (window.confirm("Вы уверены, что хотите удалить эту категорию?")) {
       try {
         await axios.delete(`${API}/categories/${categoryId}`);
         fetchCategories();
       } catch (error) {
-        alert("Error: " + (error.response?.data?.detail || "Failed to delete category"));
+        alert("Ошибка: " + (error.response?.data?.detail || "Не удалось удалить категорию"));
       }
     }
   };
 
   const deleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+    if (window.confirm("Вы уверены, что хотите удалить этого пользователя?")) {
       try {
         await axios.delete(`${API}/users/${userId}`);
         fetchUsers();
       } catch (error) {
-        alert("Error: " + (error.response?.data?.detail || "Failed to delete user"));
+        alert("Ошибка: " + (error.response?.data?.detail || "Не удалось удалить пользователя"));
       }
     }
+  };
+
+  const getRoleDisplayName = (role) => {
+    const roleNames = {
+      'waitress': 'Официант',
+      'kitchen': 'Кухня',
+      'bartender': 'Бармен',
+      'administrator': 'Администратор'
+    };
+    return roleNames[role] || role;
   };
 
   return (
@@ -259,26 +269,26 @@ const AdminInterface = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <h1 className="text-2xl font-bold text-gray-900">
-              Administrator: {user.full_name}
+              Администратор: {user.full_name}
             </h1>
             <div className="flex space-x-4">
               <button
                 onClick={() => setActiveTab("categories")}
                 className={`px-4 py-2 rounded-md ${activeTab === "categories" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
               >
-                Categories
+                Категории
               </button>
               <button
                 onClick={() => setActiveTab("users")}
                 className={`px-4 py-2 rounded-md ${activeTab === "users" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
               >
-                Users
+                Пользователи
               </button>
               <button
                 onClick={() => setActiveTab("menu")}
                 className={`px-4 py-2 rounded-md ${activeTab === "menu" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
               >
-                Menu
+                Меню
               </button>
             </div>
           </div>
@@ -289,42 +299,42 @@ const AdminInterface = () => {
         
         {activeTab === "categories" && (
           <div>
-            <h2 className="text-xl font-bold mb-4">✨ Category Management</h2>
+            <h2 className="text-xl font-bold mb-4">✨ Управление Категориями</h2>
             
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-              <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
+              <h3 className="text-lg font-semibold mb-4">Добавить Новую Категорию</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <input
                   type="text"
-                  placeholder="Category Name (e.g., appetizers)"
+                  placeholder="Название категории (например, appetizers)"
                   value={newCategory.name}
                   onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="text"
-                  placeholder="Display Name (e.g., Appetizers)"
+                  placeholder="Отображаемое название (например, Закуски)"
                   value={newCategory.display_name}
                   onChange={(e) => setNewCategory({...newCategory, display_name: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="text"
-                  placeholder="Emoji (e.g., 🥗)"
+                  placeholder="Эмодзи (например, 🥗)"
                   value={newCategory.emoji}
                   onChange={(e) => setNewCategory({...newCategory, emoji: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="text"
-                  placeholder="Description (optional)"
+                  placeholder="Описание (необязательно)"
                   value={newCategory.description}
                   onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="number"
-                  placeholder="Sort Order"
+                  placeholder="Порядок сортировки"
                   value={newCategory.sort_order}
                   onChange={(e) => setNewCategory({...newCategory, sort_order: parseInt(e.target.value)})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -334,7 +344,7 @@ const AdminInterface = () => {
                   disabled={loading}
                   className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400"
                 >
-                  {loading ? "Adding..." : "Add Category"}
+                  {loading ? "Добавление..." : "Добавить Категорию"}
                 </button>
               </div>
             </div>
@@ -343,10 +353,10 @@ const AdminInterface = () => {
               <table className="min-w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Display</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Отображение</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -368,7 +378,7 @@ const AdminInterface = () => {
                         <span className={`px-2 py-1 rounded text-xs ${
                           category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                          {category.is_active ? 'Active' : 'Inactive'}
+                          {category.is_active ? 'Активная' : 'Неактивная'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -376,7 +386,7 @@ const AdminInterface = () => {
                           onClick={() => deleteCategory(category.id)}
                           className="text-red-600 hover:text-red-900"
                         >
-                          Delete
+                          Удалить
                         </button>
                       </td>
                     </tr>
@@ -389,35 +399,35 @@ const AdminInterface = () => {
 
         {activeTab === "users" && (
           <div>
-            <h2 className="text-xl font-bold mb-4">👥 User Management</h2>
+            <h2 className="text-xl font-bold mb-4">👥 Управление Пользователями</h2>
             
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-              <h3 className="text-lg font-semibold mb-4">Add New User</h3>
+              <h3 className="text-lg font-semibold mb-4">Добавить Нового Пользователя</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <input
                   type="text"
-                  placeholder="Username"
+                  placeholder="Имя пользователя"
                   value={newUser.username}
                   onChange={(e) => setNewUser({...newUser, username: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="password"
-                  placeholder="Password"
+                  placeholder="Пароль"
                   value={newUser.password}
                   onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder="Полное имя"
                   value={newUser.full_name}
                   onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <input
                   type="email"
-                  placeholder="Email (optional)"
+                  placeholder="Email (необязательно)"
                   value={newUser.email}
                   onChange={(e) => setNewUser({...newUser, email: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -427,17 +437,17 @@ const AdminInterface = () => {
                   onChange={(e) => setNewUser({...newUser, role: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
-                  <option value="waitress">Waitress</option>
-                  <option value="kitchen">Kitchen</option>
-                  <option value="bartender">Bartender</option>
-                  <option value="administrator">Administrator</option>
+                  <option value="waitress">Официант</option>
+                  <option value="kitchen">Кухня</option>
+                  <option value="bartender">Бармен</option>
+                  <option value="administrator">Администратор</option>
                 </select>
                 <button
                   onClick={addUser}
                   disabled={loading}
                   className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400"
                 >
-                  {loading ? "Adding..." : "Add User"}
+                  {loading ? "Добавление..." : "Добавить Пользователя"}
                 </button>
               </div>
             </div>
@@ -446,10 +456,10 @@ const AdminInterface = () => {
               <table className="min-w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Пользователь</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Роль</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Контакты</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -466,18 +476,18 @@ const AdminInterface = () => {
                           user.role === 'kitchen' ? 'bg-orange-100 text-orange-800' :
                           'bg-green-100 text-green-800'
                         }`}>
-                          {user.role}
+                          {getRoleDisplayName(user.role)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>{user.email || 'No email'}</div>
+                        <div>{user.email || 'Нет email'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => deleteUser(user.id)}
                           className="text-red-600 hover:text-red-900"
                         >
-                          Delete
+                          Удалить
                         </button>
                       </td>
                     </tr>
@@ -490,16 +500,16 @@ const AdminInterface = () => {
 
         {activeTab === "menu" && (
           <div>
-            <h2 className="text-xl font-bold mb-4">🍽️ Menu Items with Dynamic Categories</h2>
+            <h2 className="text-xl font-bold mb-4">🍽️ Меню с Динамическими Категориями</h2>
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <table className="min-w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Блюдо</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -519,13 +529,13 @@ const AdminInterface = () => {
                         ${item.price.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.item_type}
+                        {item.item_type === 'food' ? 'Еда' : 'Напиток'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded text-xs ${
                           item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                          {item.available ? 'Available' : 'Unavailable'}
+                          {item.available ? 'Доступно' : 'Недоступно'}
                         </span>
                       </td>
                     </tr>
@@ -544,28 +554,38 @@ const AdminInterface = () => {
 const SimpleInterface = ({ role }) => {
   const { user } = React.useContext(AuthContext);
   
+  const getRoleDisplayName = (role) => {
+    const roleNames = {
+      'waitress': 'Официант',
+      'kitchen': 'Кухня',
+      'bartender': 'Бармен',
+      'administrator': 'Администратор'
+    };
+    return roleNames[role] || role;
+  };
+  
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          {role.charAt(0).toUpperCase() + role.slice(1)}: {user.full_name}
+          {getRoleDisplayName(role)}: {user.full_name}
         </h2>
         <p className="text-gray-600 mb-4">
-          Welcome to the Restaurant Management System
+          Добро пожаловать в Систему Управления Рестораном
         </p>
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
           <p className="text-sm">
-            ✅ <strong>Enhanced Features Added:</strong>
+            ✅ <strong>Добавлены Улучшенные Функции:</strong>
           </p>
           <ul className="text-sm mt-2 space-y-1">
-            <li>• Dynamic categories (editable by admin)</li>
-            <li>• Enhanced user management</li>
-            <li>• Role-based access control</li>
-            <li>• Improved menu system</li>
+            <li>• Динамические категории (редактируемые администратором)</li>
+            <li>• Расширенное управление пользователями</li>
+            <li>• Контроль доступа на основе ролей</li>
+            <li>• Улучшенная система меню</li>
           </ul>
         </div>
         <p className="text-sm text-gray-500">
-          Full {role} interface with enhanced features available in the complete version.
+          Полный интерфейс для роли "{getRoleDisplayName(role)}" с расширенными функциями доступен в полной версии.
         </p>
       </div>
     </div>
@@ -591,7 +611,7 @@ const MainApp = () => {
       case 'bartender':
         return <SimpleInterface role="bartender" />;
       default:
-        return <div>Unknown role</div>;
+        return <div>Неизвестная роль</div>;
     }
   };
 
@@ -601,7 +621,7 @@ const MainApp = () => {
         onClick={logout}
         className="absolute top-4 right-4 z-50 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
       >
-        Logout
+        Выйти
       </button>
       {renderInterface()}
     </div>

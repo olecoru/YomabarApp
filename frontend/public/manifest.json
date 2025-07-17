@@ -1,12 +1,13 @@
 {
-  "name": "Система Управления Рестораном",
-  "short_name": "РесторанПОС",
-  "description": "Профессиональная система управления рестораном для официантов, кухни, бара и администраторов",
+  "name": "YomaBar - Система Управления Рестораном",
+  "short_name": "YomaBar",
+  "description": "Профессиональная система управления рестораном YomaBar для официантов, кухни, бара и администраторов",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#f97316",
+  "background_color": "#fef2f2",
+  "theme_color": "#dc2626",
   "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -16,15 +17,79 @@
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "food", "productivity"],
+  "categories": ["business", "food", "productivity", "restaurant", "hospitality"],
   "lang": "ru-RU",
-  "dir": "ltr"
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay", "minimal-ui"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "shortcuts": [
+    {
+      "name": "Официант",
+      "short_name": "Официант",
+      "description": "Быстрый доступ к интерфейсу официанта",
+      "url": "/?role=waitress",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Кухня",
+      "short_name": "Кухня",
+      "description": "Быстрый доступ к интерфейсу кухни",
+      "url": "/?role=kitchen",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Бар",
+      "short_name": "Бар",
+      "description": "Быстрый доступ к интерфейсу бара",
+      "url": "/?role=bartender",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Админ",
+      "short_name": "Админ",
+      "description": "Быстрый доступ к панели администратора",
+      "url": "/?role=administrator",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

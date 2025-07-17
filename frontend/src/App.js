@@ -1782,9 +1782,9 @@ const MainApp = () => {
       case 'waitress':
         return <WaitressInterface />;
       case 'kitchen':
-        return <SimpleInterface role="kitchen" />;
+        return <KitchenInterface />;
       case 'bartender':
-        return <SimpleInterface role="bartender" />;
+        return <BarInterface />;
       default:
         return <div>Неизвестная роль</div>;
     }

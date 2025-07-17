@@ -340,20 +340,20 @@ const WaitressInterface = () => {
       if (teamName.trim()) {
         orderNotes += ` | Команда: ${teamName}`;
       }
-      orderNotes += "\\n\\nРаспределение по клиентам:\\n";
+      orderNotes += "\n\nРаспределение по клиентам:\n";
 
       clients.forEach(client => {
         if (client.order.length > 0) {
-          orderNotes += `${client.name}:\\n`;
+          orderNotes += `${client.name}:\n`;
           client.order.forEach(item => {
             allItems.push({
               menu_item_id: item.id,
               quantity: item.quantity,
               price: item.price
             });
-            orderNotes += `  - ${item.name} x${item.quantity} ($${(item.price * item.quantity).toFixed(2)})\\n`;
+            orderNotes += `  - ${item.name} x${item.quantity} ($${(item.price * item.quantity).toFixed(2)})\n`;
           });
-          orderNotes += `  Итого: $${calculateClientTotal(client.id).toFixed(2)}\\n\\n`;
+          orderNotes += `  Итого: $${calculateClientTotal(client.id).toFixed(2)}\n\n`;
         }
       });
 

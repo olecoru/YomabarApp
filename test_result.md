@@ -408,9 +408,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Order Status Management"
-  stuck_tasks:
-    - "Order Status Management"
+    - "Admin Interface Price Calculation Fix"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 

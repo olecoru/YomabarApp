@@ -184,7 +184,20 @@ class MenuItemWithCategory(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-# Order Models
+# Order Models - Simplified for frontend compatibility
+class SimpleOrderItem(BaseModel):
+    menu_item_id: str
+    quantity: int
+    price: float
+
+class SimpleOrderCreate(BaseModel):
+    customer_name: str
+    table_number: int
+    items: List[SimpleOrderItem]
+    total: float
+    status: str = "pending"
+    notes: Optional[str] = None
+
 class OrderItem(BaseModel):
     menu_item_id: str
     menu_item_name: str

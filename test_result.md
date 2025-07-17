@@ -287,15 +287,18 @@ backend:
 
   - task: "Multi-Client Order System"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Enhanced order system to support multiple clients per table. Orders now support team-based ordering suitable for quiz environment. Individual client orders are tracked within table orders while maintaining unified order management."
+      - working: true
+        agent: "testing"
+        comment: "✅ MULTI-CLIENT ORDER SYSTEM FULLY WORKING: POST /api/orders successfully creates orders with multiple clients per table (tested with 3 and 5 clients). Each client has proper structure with client_id, client_number, items, and subtotal. PUT /api/orders/{order_id}/client/{client_id} correctly updates individual client status. Team-based ordering working perfectly for quiz environment scenarios. Unified order management maintained with total_amount calculation across all clients. Order structure supports special instructions per client and proper item tracking."
 
 frontend:
   - task: "Menu Display Component"

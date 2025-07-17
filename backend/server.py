@@ -53,6 +53,10 @@ class ItemType(str, Enum):
     FOOD = "food"
     DRINK = "drink"
 
+class Department(str, Enum):
+    KITCHEN = "kitchen"
+    BAR = "bar"
+
 # Category Model (now dynamic)
 class Category(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -60,6 +64,7 @@ class Category(BaseModel):
     display_name: str
     emoji: str
     description: Optional[str] = None
+    department: Department = Department.KITCHEN  # Новое поле для отдела
     sort_order: int = 0
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -69,6 +74,7 @@ class CategoryCreate(BaseModel):
     display_name: str
     emoji: str
     description: Optional[str] = None
+    department: Department = Department.KITCHEN  # Новое поле для отдела
     sort_order: int = 0
 
 class CategoryUpdate(BaseModel):
@@ -76,6 +82,7 @@ class CategoryUpdate(BaseModel):
     display_name: Optional[str] = None
     emoji: Optional[str] = None
     description: Optional[str] = None
+    department: Optional[Department] = None  # Новое поле для отдела
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None
 

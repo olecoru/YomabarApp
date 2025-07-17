@@ -415,6 +415,184 @@ class EnhancedRestaurantTester:
                     self.log_test("GET /api/orders/kitchen (bartender - should fail)", False, f"Expected 403, got HTTP {response.status_code}")
             except Exception as e:
                 self.log_test("GET /api/orders/kitchen (bartender - should fail)", False, f"Request failed: {str(e)}")
+                
+    def test_enhanced_categories_with_department_support(self):
+        """Test Enhanced Categories with Department Support - PRIORITY TASK"""
+        print("\n=== TESTING ENHANCED CATEGORIES WITH DEPARTMENT SUPPORT (PRIORITY) ===")
+        
+        # Test 1: GET /api/categories - verify categories include department field
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/categories")
+                
+                if response.status_code == 200:
+                    categories = response.json()
+                    self.categories = categories
+                    
+                    # Check if categories have department field
+                    has_department_field = all("department" in cat for cat in categories)
+                    kitchen_categories = [cat for cat in categories if cat.get("department") == "kitchen"]
+                    bar_categories = [cat for cat in categories if cat.get("department") == "bar"]
+                    
+                    if has_department_field and kitchen_categories and bar_categories:
+                        self.log_test("GET /api/categories (with department)", True, 
+                                    f"Retrieved {len(categories)} categories with department field: {len(kitchen_categories)} kitchen, {len(bar_categories)} bar")
+                    else:
+                        self.log_test("GET /api/categories (with department)", False, 
+                                    f"Categories missing department field or no kitchen/bar categories found")
+                else:
+                    self.log_test("GET /api/categories (with department)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/categories (with department)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: POST /api/categories - create category with department field (admin only)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                new_category_data = {
+                    "name": f"test_kitchen_category_{timestamp}",
+                    "display_name": "Test Kitchen Category",
+                    "emoji": "🍳",
+                    "description": "Test kitchen category with department",
+                    "department": "kitchen",
+                    "sort_order": 99
+                }
+                response = self.session.post(f"{BACKEND_URL}/categories", json=new_category_data)
+                
+                if response.status_code == 200:
+                    created_category = response.json()
+                    self.created_category_id = created_category["id"]
+                    if created_category["department"] == "kitchen":
+                        self.log_test("POST /api/categories (with department)", True, 
+                                    f"Successfully created kitchen category: {created_category['display_name']}")
+                    else:
+                        self.log_test("POST /api/categories (with department)", False, "Department field not set correctly")
+                else:
+                    self.log_test("POST /api/categories (with department)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("POST /api/categories (with department)", False, f"Request failed: {str(e)}")
+        
+        # Test 3: Create bar category
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                bar_category_data = {
+                    "name": f"test_bar_category_{timestamp}",
+                    "display_name": "Test Bar Category",
+                    "emoji": "🍺",
+                    "description": "Test bar category with department",
+                    "department": "bar",
+                    "sort_order": 100
+                }
+                response = self.session.post(f"{BACKEND_URL}/categories", json=bar_category_data)
+                
+                if response.status_code == 200:
+                    created_category = response.json()
+                    if created_category["department"] == "bar":
+                        self.log_test("POST /api/categories (bar department)", True, 
+                                    f"Successfully created bar category: {created_category['display_name']}")
+                    else:
+                        self.log_test("POST /api/categories (bar department)", False, "Bar department field not set correctly")
+                else:
+                    self.log_test("POST /api/categories (bar department)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("POST /api/categories (bar department)", False, f"Request failed: {str(e)}")
+        
+        # Test 4: Update category department (admin only)
+        if "administrator" in self.tokens and self.created_category_id:
+            try:
+                self.set_auth_header("administrator")
+                update_data = {
+                    "department": "bar",
+                    "description": "Updated to bar department"
+                }
+                response = self.session.put(f"{BACKEND_URL}/categories/{self.created_category_id}", json=update_data)
+                
+                if response.status_code == 200:
+                    updated_category = response.json()
+                    if updated_category["department"] == "bar":
+                        self.log_test("PUT /api/categories/{id} (update department)", True, "Successfully updated category department to bar")
+                    else:
+                        self.log_test("PUT /api/categories/{id} (update department)", False, "Department update failed")
+                else:
+                    self.log_test("PUT /api/categories/{id} (update department)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("PUT /api/categories/{id} (update department)", False, f"Request failed: {str(e)}")
+        
+        # Test 5: Verify menu items properly route to departments based on category
+        if "waitress" in self.tokens and self.categories:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/menu")
+                
+                if response.status_code == 200:
+                    menu_items = response.json()
+                    self.menu_items = menu_items
+                    
+                    # Check if menu items have category information with department
+                    kitchen_items = []
+                    bar_items = []
+                    
+                    for item in menu_items:
+                        # Find the category for this item
+                        item_category = next((cat for cat in self.categories if cat["id"] == item["category_id"]), None)
+                        if item_category:
+                            if item_category["department"] == "kitchen":
+                                kitchen_items.append(item)
+                            elif item_category["department"] == "bar":
+                                bar_items.append(item)
+                    
+                    if kitchen_items and bar_items:
+                        self.log_test("Menu items department routing", True, 
+                                    f"Menu items properly categorized: {len(kitchen_items)} kitchen items, {len(bar_items)} bar items")
+                    else:
+                        self.log_test("Menu items department routing", False, 
+                                    f"Department routing issue: {len(kitchen_items)} kitchen, {len(bar_items)} bar")
+                else:
+                    self.log_test("Menu items department routing", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Menu items department routing", False, f"Request failed: {str(e)}")
+        
+        # Test 6: Verify default categories have correct departments
+        if self.categories:
+            try:
+                expected_departments = {
+                    "appetizers": "kitchen",
+                    "main_dishes": "kitchen", 
+                    "desserts": "kitchen",
+                    "beverages": "bar",
+                    "cocktails": "bar"
+                }
+                
+                department_check_passed = True
+                for category in self.categories:
+                    expected_dept = expected_departments.get(category["name"])
+                    if expected_dept and category.get("department") != expected_dept:
+                        department_check_passed = False
+                        break
+                
+                if department_check_passed:
+                    self.log_test("Default categories department assignment", True, "All default categories have correct department assignments")
+                else:
+                    self.log_test("Default categories department assignment", False, "Some default categories have incorrect department assignments")
+            except Exception as e:
+                self.log_test("Default categories department assignment", False, f"Check failed: {str(e)}")
+        
+        # Test 7: Clean up test category
+        if "administrator" in self.tokens and self.created_category_id:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.delete(f"{BACKEND_URL}/categories/{self.created_category_id}")
+                
+                if response.status_code == 200:
+                    self.log_test("DELETE test category cleanup", True, "Successfully cleaned up test category")
+                else:
+                    self.log_test("DELETE test category cleanup", False, f"Cleanup failed: HTTP {response.status_code}")
+            except Exception as e:
+                self.log_test("DELETE test category cleanup", False, f"Cleanup failed: {str(e)}")
                     
     def test_enhanced_order_management(self):
         """Test enhanced order management with multiple clients per table"""

@@ -848,9 +848,10 @@ const AdminInterface = () => {
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${API}/orders`);
-      setOrders(response.data);
+      setOrders(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Ошибка загрузки заказов:", error);
+      setOrders([]);
     }
   };
 

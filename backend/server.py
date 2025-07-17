@@ -806,37 +806,22 @@ async def get_bar_orders(current_user: User = Depends(require_role([UserRole.BAR
     
     return bar_orders
 
-@api_router.put("/orders/{order_id}/client/{client_id}", response_model=Order)
-async def update_client_order_status(order_id: str, client_id: str, status_update: OrderUpdate, current_user: User = Depends(get_current_user)):
-    """Update client order status"""
-    order = await db.orders.find_one({"id": order_id})
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    # Update the specific client's status
-    updated = False
-    for client in order["clients"]:
-        if client["client_id"] == client_id:
-            client["status"] = status_update.status
-            if status_update.status == OrderStatus.CONFIRMED:
-                client["confirmed_at"] = datetime.utcnow()
-            elif status_update.status == OrderStatus.SENT_TO_KITCHEN:
-                client["sent_to_kitchen_at"] = datetime.utcnow()
-            elif status_update.status == OrderStatus.SENT_TO_BAR:
-                client["sent_to_bar_at"] = datetime.utcnow()
-            updated = True
-            break
-    
-    if not updated:
-        raise HTTPException(status_code=404, detail="Client not found in order")
-    
-    await db.orders.update_one(
-        {"id": order_id},
-        {"$set": {"clients": order["clients"], "updated_at": datetime.utcnow()}}
-    )
-    
-    updated_order = await db.orders.find_one({"id": order_id})
-    return Order(**updated_order)
+@api_router.put("/orders/{order_id}")
+async def update_order_status(order_id: str, status_update: dict, current_user: User = Depends(get_current_user)):
+    """Update order status"""
+    try:
+        result = await db.orders.update_one(
+            {"id": order_id},
+            {"$set": {"status": status_update.get("status"), "updated_at": datetime.utcnow()}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Order not found")
+            
+        return {"success": True}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update order: {str(e)}")
 
 @api_router.get("/orders/table/{table_number}", response_model=List[Order])
 async def get_orders_by_table(table_number: int, current_user: User = Depends(get_current_user)):

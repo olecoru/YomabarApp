@@ -836,6 +836,114 @@ async def get_orders_by_table(table_number: int, current_user: User = Depends(ge
     orders = await db.orders.find({"table_number": table_number}).sort("created_at", -1).to_list(1000)
     return [Order(**order) for order in orders]
 
+# Menu item management endpoints
+@api_router.post("/menu", response_model=MenuItem)
+async def create_menu_item(menu_item: MenuItemCreate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Create a new menu item (admin only)"""
+    # Verify category exists
+    category = await db.categories.find_one({"id": menu_item.category_id})
+    if not category:
+        raise HTTPException(status_code=400, detail="Category not found")
+    
+    new_item = MenuItem(**menu_item.dict())
+    await db.menu_items.insert_one(new_item.dict())
+    return new_item
+
+@api_router.put("/menu/{item_id}", response_model=MenuItem)
+async def update_menu_item(item_id: str, menu_item: MenuItemUpdate, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Update a menu item (admin only)"""
+    existing_item = await db.menu_items.find_one({"id": item_id})
+    if not existing_item:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    
+    # If category_id is being updated, verify it exists
+    if menu_item.category_id:
+        category = await db.categories.find_one({"id": menu_item.category_id})
+        if not category:
+            raise HTTPException(status_code=400, detail="Category not found")
+    
+    update_data = {k: v for k, v in menu_item.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.utcnow()
+    
+    await db.menu_items.update_one(
+        {"id": item_id},
+        {"$set": update_data}
+    )
+    
+    updated_item = await db.menu_items.find_one({"id": item_id})
+    return MenuItem(**updated_item)
+
+@api_router.delete("/menu/{item_id}")
+async def delete_menu_item(item_id: str, current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Delete a menu item (admin only)"""
+    existing_item = await db.menu_items.find_one({"id": item_id})
+    if not existing_item:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    
+    await db.menu_items.delete_one({"id": item_id})
+    return {"message": "Menu item deleted successfully"}
+
+# Orders for kitchen and bar
+@api_router.get("/orders/kitchen")
+async def get_kitchen_orders(current_user: User = Depends(require_role([UserRole.KITCHEN, UserRole.ADMINISTRATOR]))):
+    """Get orders for kitchen department"""
+    # Get all orders that have items for kitchen
+    orders = await db.orders.find({"status": {"$in": ["pending", "confirmed", "preparing"]}}).sort("created_at", 1).to_list(1000)
+    
+    kitchen_orders = []
+    for order in orders:
+        # Filter items that belong to kitchen categories
+        kitchen_items = []
+        for item in order.get("items", []):
+            menu_item = await db.menu_items.find_one({"id": item["menu_item_id"]})
+            if menu_item:
+                category = await db.categories.find_one({"id": menu_item["category_id"]})
+                if category and category.get("department") == "kitchen":
+                    kitchen_items.append({
+                        **item,
+                        "name": menu_item["name"],
+                        "category_name": category["display_name"],
+                        "category_emoji": category["emoji"]
+                    })
+        
+        if kitchen_items:
+            kitchen_orders.append({
+                **order,
+                "items": kitchen_items
+            })
+    
+    return kitchen_orders
+
+@api_router.get("/orders/bar")
+async def get_bar_orders(current_user: User = Depends(require_role([UserRole.BARTENDER, UserRole.ADMINISTRATOR]))):
+    """Get orders for bar department"""
+    # Get all orders that have items for bar
+    orders = await db.orders.find({"status": {"$in": ["pending", "confirmed", "preparing"]}}).sort("created_at", 1).to_list(1000)
+    
+    bar_orders = []
+    for order in orders:
+        # Filter items that belong to bar categories
+        bar_items = []
+        for item in order.get("items", []):
+            menu_item = await db.menu_items.find_one({"id": item["menu_item_id"]})
+            if menu_item:
+                category = await db.categories.find_one({"id": menu_item["category_id"]})
+                if category and category.get("department") == "bar":
+                    bar_items.append({
+                        **item,
+                        "name": menu_item["name"],
+                        "category_name": category["display_name"],
+                        "category_emoji": category["emoji"]
+                    })
+        
+        if bar_items:
+            bar_orders.append({
+                **order,
+                "items": bar_items
+            })
+    
+    return bar_orders
+
 # Table management
 @api_router.get("/tables")
 async def get_tables(current_user: User = Depends(get_current_user)):

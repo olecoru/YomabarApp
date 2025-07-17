@@ -5,6 +5,69 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Фразы для приветствия официантов
+const WELCOME_PHRASES = [
+  "Привет, котёнок! Желаю удачной смены, милых клиентов и щедрых чаевых!",
+  "Здравствуй, цыплёнок! Пусть сегодня будет отличная смена и добрые гости с хорошими чаевыми!",
+  "Привет, зайчик! Удачной смены, приятных посетителей и больших чаевых!",
+  "Добро пожаловать, лапушка! Желаю мягких улыбок гостей и щедрых поощрений!",
+  "Привет, душечка! Отличной смены, вежливых клиентов и здоровских чаевых!",
+  "Добро пожаловать, солнышко! Пусть смена пройдёт легко, а гости оставят щедрые чаевые!",
+  "Здравствуй, родненький! Удачной смены и море довольных гостей с хорошими чаевыми!",
+  "Приятной смены, пушистик! Желаю много улыбок и щедрых чаевых!",
+  "Привет, цветочек! Пусть сегодня смена будет лёгкой и клиенты очень благодарными!",
+  "Добро пожаловать, милашка! Желаю чудесных гостей и солидных чаевых!",
+  "Привет, сладенькая! Удачной смены и приятных сюрпризов от клиентов!",
+  "С новым днём, конфетка! Пусть гости будут добрыми, а чаевые — большими!",
+  "Добро пожаловать, ягодка! Желаю отличной смены и благодарных клиентов!",
+  "Приятной работы, звездочка! Пусть гости дарят улыбки и щедрые чаевые!",
+  "Доброе утро, ангелочек! Удачной смены и море вежливых посетителей!",
+  "Привет, пупсик! Желаю лёгкой смены, дружелюбных гостей и хороших чаевых!",
+  "Здравствуй, рыбка! Удачи сегодня, милых клиентов и достойных чаевых!",
+  "Приятной смены, птичка! Пусть гости будут в настроении платить щедро!",
+  "Добро пожаловать, зайчонок! Желаю отличных клиентов и больших чаевых!",
+  "Привет, карапузик! Лёгкой смены, добрых гостей и солидных бонусов от чаевых!",
+  "Добро пожаловать, чудо! Удачной смены и благодарных посетителей!",
+  "Здравствуй, медвежонок! Пусть смена пройдёт гладко и в копилке будут щедрые чаевые!",
+  "Привет, гусёнок! Желаю тёплых улыбок гостей и достойных чаевых!",
+  "Доброе утро, лимончик! Удачной смены, приятных клиентов и щедрых чаевых!",
+  "Приятной смены, бабочка! Пусть каждый гость приносит радость и хорошие чаевые!"
+];
+
+// Фразы-похвала после каждого заказа
+const COMPLETION_PHRASES = [
+  "Отлично, котёнок! Ты справилась с этим, дальше – лучше!",
+  "Молодчинка, цыплёнок! Справилась на отлично, дальше – лучше!",
+  "Супер, зайчик! Ты молодец, дальше – лучше!",
+  "Браво, лапушка! Отлично получилось, дальше – лучше!",
+  "Отлично справилась, душечка! Ты справилась с этим, дальше – лучше!",
+  "Блестяще, солнышко! Ты молодец, дальше – лучше!",
+  "Ты лучшая, родненький! Справилась отлично, дальше – лучше!",
+  "Великолепно, пушистик! Ты справилась с этим, дальше – лучше!",
+  "Превосходно, милашка! Справилась на ура, дальше – лучше!",
+  "Умничка, сладенькая! Ты справилась с этим, дальше – лучше!",
+  "Замечательно, конфетка! Супер работа, дальше – лучше!",
+  "Отлично поработала, ягодка! Ты справилась с этим, дальше – лучше!",
+  "Ты супер, звездочка! Справилась отлично, дальше – лучше!",
+  "Потрясающе, ангелочек! Ты справилась с этим, дальше – лучше!",
+  "Круто, пупсик! Справилась на отлично, дальше – лучше!",
+  "Обалденно, рыбка! Ты справилась с этим, дальше – лучше!",
+  "Шикарно, птичка! Супер результат, дальше – лучше!",
+  "Блистательно, зайчонок! Ты справилась с этим, дальше – лучше!",
+  "Ты ас, карапузик! Справилась на ура, дальше – лучше!",
+  "Бесподобно, бусинка! Ты справилась с этим, дальше – лучше!",
+  "Великолепно, медвежонок! Справилась отлично, дальше – лучше!",
+  "Прекрасно, гусёнок! Ты справилась с этим, дальше – лучше!",
+  "Исключительно, лимончик! Супер работа, дальше – лучше!",
+  "Фантастика, бабочка! Ты справилась с этим, дальше – лучше!",
+  "Невероятно, чудо! Справилась на отлично, дальше – лучше!"
+];
+
+// Функция для случайного выбора фразы
+const getRandomPhrase = (phrases) => {
+  return phrases[Math.floor(Math.random() * phrases.length)];
+};
+
 // Auth Context
 const AuthContext = React.createContext();
 
@@ -80,11 +143,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Система Управления Рестораном
+        <div className="text-center">
+          <div className="flex justify-center mb-6">
+            <div className="yoma-logo">
+              <h1 className="text-4xl font-bold text-red-600">YomaBar</h1>
+              <p className="text-red-500 text-sm font-medium">Система Управления Рестораном</p>
+            </div>
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+            Добро пожаловать в YomaBar
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Пожалуйста, войдите в свою учетную запись
@@ -96,7 +165,7 @@ const Login = () => {
               <input
                 type="text"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                 placeholder="Имя пользователя"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -106,7 +175,7 @@ const Login = () => {
               <input
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm"
                 placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -122,7 +191,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
             >
               {loading ? "Вход..." : "Войти"}
             </button>
@@ -132,10 +201,10 @@ const Login = () => {
         <div className="mt-6 text-center">
           <h3 className="text-lg font-medium text-gray-900">Демо Аккаунты</h3>
           <div className="mt-2 space-y-1 text-sm text-gray-600">
-            <p>Официант: <code>waitress1</code> / <code>password123</code></p>
-            <p>Кухня: <code>kitchen1</code> / <code>password123</code></p>
-            <p>Бармен: <code>bartender1</code> / <code>password123</code></p>
-            <p>Администратор: <code>admin1</code> / <code>password123</code></p>
+            <p>Официант: <code className="bg-gray-100 px-2 py-1 rounded">waitress1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
+            <p>Кухня: <code className="bg-gray-100 px-2 py-1 rounded">kitchen1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
+            <p>Бармен: <code className="bg-gray-100 px-2 py-1 rounded">bartender1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
+            <p>Администратор: <code className="bg-gray-100 px-2 py-1 rounded">admin1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
           </div>
         </div>
       </div>
@@ -143,7 +212,411 @@ const Login = () => {
   );
 };
 
-// Admin Interface - Focus on the new features
+// Waitress Interface - Complete implementation
+const WaitressInterface = () => {
+  const { user } = React.useContext(AuthContext);
+  const [activeStep, setActiveStep] = useState("welcome");
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [activeClient, setActiveClient] = useState(null);
+  const [menu, setMenu] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [order, setOrder] = useState([]);
+  const [customerName, setCustomerName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [welcomePhrase, setWelcomePhrase] = useState("");
+  const [completionPhrase, setCompletionPhrase] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  useEffect(() => {
+    // Показать приветственную фразу при загрузке
+    setWelcomePhrase(getRandomPhrase(WELCOME_PHRASES));
+    fetchMenu();
+    fetchCategories();
+  }, []);
+
+  const fetchMenu = async () => {
+    try {
+      const response = await axios.get(`${API}/menu`);
+      setMenu(response.data);
+    } catch (error) {
+      console.error("Ошибка загрузки меню:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API}/categories`);
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Ошибка загрузки категорий:", error);
+    }
+  };
+
+  const filteredMenu = selectedCategory === "all" ? menu : menu.filter(item => item.category_id === selectedCategory);
+
+  const addToOrder = (menuItem) => {
+    const existingItem = order.find(item => item.id === menuItem.id);
+    if (existingItem) {
+      setOrder(order.map(item => 
+        item.id === menuItem.id 
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setOrder([...order, { ...menuItem, quantity: 1 }]);
+    }
+  };
+
+  const removeFromOrder = (menuItemId) => {
+    setOrder(order.filter(item => item.id !== menuItemId));
+  };
+
+  const updateQuantity = (menuItemId, quantity) => {
+    if (quantity <= 0) {
+      removeFromOrder(menuItemId);
+    } else {
+      setOrder(order.map(item => 
+        item.id === menuItemId 
+          ? { ...item, quantity: quantity }
+          : item
+      ));
+    }
+  };
+
+  const calculateTotal = () => {
+    return order.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const submitOrder = async () => {
+    if (!customerName.trim()) {
+      alert("Пожалуйста, введите имя клиента");
+      return;
+    }
+
+    if (order.length === 0) {
+      alert("Добавьте блюда в заказ");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const orderData = {
+        customer_name: customerName,
+        table_number: selectedTable,
+        items: order.map(item => ({
+          menu_item_id: item.id,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: calculateTotal(),
+        status: "pending",
+        notes: `Клиент: ${customerName} | Стол: ${selectedTable}`
+      };
+
+      await axios.post(`${API}/orders`, orderData);
+      
+      // Показать фразу-похвалу
+      setCompletionPhrase(getRandomPhrase(COMPLETION_PHRASES));
+      
+      // Очистить заказ
+      setOrder([]);
+      setCustomerName("");
+      
+      // Показать экран успеха
+      setActiveStep("success");
+      
+    } catch (error) {
+      alert("Ошибка при отправке заказа: " + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startNewOrder = () => {
+    setOrder([]);
+    setCustomerName("");
+    setActiveStep("table");
+  };
+
+  const getRoleDisplayName = (role) => {
+    const roleNames = {
+      'waitress': 'Официант',
+      'kitchen': 'Кухня',
+      'bartender': 'Бармен',
+      'administrator': 'Администратор'
+    };
+    return roleNames[role] || role;
+  };
+
+  // Приветственный экран
+  if (activeStep === "welcome") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-red-600 mb-2">YomaBar</h1>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {getRoleDisplayName(user.role)}: {user.full_name}
+            </h2>
+          </div>
+          
+          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-800 font-medium text-lg">
+              {welcomePhrase}
+            </p>
+          </div>
+          
+          <button
+            onClick={() => setActiveStep("table")}
+            className="w-full bg-red-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Начать работу
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Экран успеха
+  if (activeStep === "success") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-red-600 mb-2">YomaBar</h1>
+            <div className="text-6xl mb-4">🎉</div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Заказ успешно отправлен!
+            </h2>
+          </div>
+          
+          <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
+            <p className="text-green-800 font-medium text-lg">
+              {completionPhrase}
+            </p>
+          </div>
+          
+          <div className="space-y-3">
+            <button
+              onClick={startNewOrder}
+              className="w-full bg-red-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Новый заказ
+            </button>
+            <button
+              onClick={() => setActiveStep("welcome")}
+              className="w-full bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Вернуться к приветствию
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Выбор стола
+  if (activeStep === "table") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-bold text-red-600 mb-2">YomaBar</h1>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Выберите стол
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-3 mb-6">
+              {Array.from({ length: 28 }, (_, i) => i + 1).map(tableNumber => (
+                <button
+                  key={tableNumber}
+                  onClick={() => {
+                    setSelectedTable(tableNumber);
+                    setActiveStep("order");
+                  }}
+                  className="aspect-square bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+                >
+                  {tableNumber}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => setActiveStep("welcome")}
+              className="w-full bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Назад
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Интерфейс создания заказа
+  if (activeStep === "order") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
+        <div className="max-w-6xl mx-auto p-4">
+          <div className="bg-white rounded-lg shadow-lg">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl font-bold text-red-600">YomaBar</h1>
+                  <p className="text-gray-600">Стол {selectedTable} | {user.full_name}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Заказ</p>
+                  <p className="text-lg font-semibold">{order.length} блюд</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Имя клиента
+                    </label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      placeholder="Введите имя клиента"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Категория
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setSelectedCategory("all")}
+                        className={`px-4 py-2 rounded-md font-medium text-sm ${
+                          selectedCategory === "all"
+                            ? "bg-red-600 text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }`}
+                      >
+                        Все
+                      </button>
+                      {categories.map(category => (
+                        <button
+                          key={category.id}
+                          onClick={() => setSelectedCategory(category.id)}
+                          className={`px-4 py-2 rounded-md font-medium text-sm ${
+                            selectedCategory === category.id
+                              ? "bg-red-600 text-white"
+                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                          }`}
+                        >
+                          {category.emoji} {category.display_name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredMenu.map(item => (
+                      <div key={item.id} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                          <span className="text-red-600 font-bold">${item.price.toFixed(2)}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">{item.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">
+                            {item.category_emoji} {item.category_display_name}
+                          </span>
+                          <button
+                            onClick={() => addToOrder(item)}
+                            className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors"
+                          >
+                            Добавить
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lg:col-span-1">
+                  <div className="bg-gray-50 p-4 rounded-lg sticky top-4">
+                    <h3 className="font-semibold text-gray-900 mb-4">Заказ</h3>
+                    
+                    {order.length === 0 ? (
+                      <p className="text-gray-500 text-sm">Заказ пуст</p>
+                    ) : (
+                      <div className="space-y-3 mb-4">
+                        {order.map(item => (
+                          <div key={item.id} className="flex justify-between items-center">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{item.name}</p>
+                              <p className="text-xs text-gray-500">${item.price.toFixed(2)}</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-700"
+                              >
+                                -
+                              </button>
+                              <span className="w-8 text-center text-sm">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-700"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="border-t pt-4">
+                      <div className="flex justify-between items-center font-semibold text-lg mb-4">
+                        <span>Итого:</span>
+                        <span className="text-red-600">${calculateTotal().toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <button
+                          onClick={submitOrder}
+                          disabled={loading || order.length === 0 || !customerName.trim()}
+                          className="w-full bg-red-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loading ? "Отправка..." : "Отправить заказ"}
+                        </button>
+                        
+                        <button
+                          onClick={() => setActiveStep("table")}
+                          className="w-full bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          Сменить стол
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+// Admin Interface
 const AdminInterface = () => {
   const { user } = React.useContext(AuthContext);
   const [activeTab, setActiveTab] = useState("categories");
@@ -264,29 +737,30 @@ const AdminInterface = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 admin-interface">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Администратор: {user.full_name}
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-red-600">YomaBar</h1>
+              <p className="text-gray-600">Администратор: {user.full_name}</p>
+            </div>
             <div className="flex space-x-4">
               <button
                 onClick={() => setActiveTab("categories")}
-                className={`px-4 py-2 rounded-md ${activeTab === "categories" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                className={`px-4 py-2 rounded-md font-medium ${activeTab === "categories" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
               >
                 Категории
               </button>
               <button
                 onClick={() => setActiveTab("users")}
-                className={`px-4 py-2 rounded-md ${activeTab === "users" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                className={`px-4 py-2 rounded-md font-medium ${activeTab === "users" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
               >
                 Пользователи
               </button>
               <button
                 onClick={() => setActiveTab("menu")}
-                className={`px-4 py-2 rounded-md ${activeTab === "menu" ? "bg-orange-500 text-white" : "bg-gray-200"}`}
+                className={`px-4 py-2 rounded-md font-medium ${activeTab === "menu" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
               >
                 Меню
               </button>
@@ -309,35 +783,35 @@ const AdminInterface = () => {
                   placeholder="Название категории (например, appetizers)"
                   value={newCategory.name}
                   onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="text"
                   placeholder="Отображаемое название (например, Закуски)"
                   value={newCategory.display_name}
                   onChange={(e) => setNewCategory({...newCategory, display_name: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="text"
                   placeholder="Эмодзи (например, 🥗)"
                   value={newCategory.emoji}
                   onChange={(e) => setNewCategory({...newCategory, emoji: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="text"
                   placeholder="Описание (необязательно)"
                   value={newCategory.description}
                   onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="number"
                   placeholder="Порядок сортировки"
                   value={newCategory.sort_order}
                   onChange={(e) => setNewCategory({...newCategory, sort_order: parseInt(e.target.value)})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <button
                   onClick={addCategory}
@@ -409,33 +883,33 @@ const AdminInterface = () => {
                   placeholder="Имя пользователя"
                   value={newUser.username}
                   onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="password"
                   placeholder="Пароль"
                   value={newUser.password}
                   onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="text"
                   placeholder="Полное имя"
                   value={newUser.full_name}
                   onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <input
                   type="email"
                   placeholder="Email (необязательно)"
                   value={newUser.email}
                   onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
                 <select
                   value={newUser.role}
                   onChange={(e) => setNewUser({...newUser, role: e.target.value})}
-                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="waitress">Официант</option>
                   <option value="kitchen">Кухня</option>
@@ -550,7 +1024,7 @@ const AdminInterface = () => {
   );
 };
 
-// Simple interface for other roles
+// Simple interface for kitchen and bartender roles
 const SimpleInterface = ({ role }) => {
   const { user } = React.useContext(AuthContext);
   
@@ -565,25 +1039,31 @@ const SimpleInterface = ({ role }) => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          {getRoleDisplayName(role)}: {user.full_name}
-        </h2>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-red-600 mb-2">YomaBar</h1>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {getRoleDisplayName(role)}: {user.full_name}
+          </h2>
+        </div>
+        
         <p className="text-gray-600 mb-4">
-          Добро пожаловать в Систему Управления Рестораном
+          Добро пожаловать в Систему Управления Рестораном YomaBar
         </p>
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          <p className="text-sm">
-            ✅ <strong>Добавлены Улучшенные Функции:</strong>
+        
+        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
+          <p className="text-sm text-green-800">
+            ✅ <strong>Расширенные функции:</strong>
           </p>
-          <ul className="text-sm mt-2 space-y-1">
-            <li>• Динамические категории (редактируемые администратором)</li>
+          <ul className="text-sm mt-2 space-y-1 text-green-700">
+            <li>• Динамические категории</li>
             <li>• Расширенное управление пользователями</li>
             <li>• Контроль доступа на основе ролей</li>
             <li>• Улучшенная система меню</li>
           </ul>
         </div>
+        
         <p className="text-sm text-gray-500">
           Полный интерфейс для роли "{getRoleDisplayName(role)}" с расширенными функциями доступен в полной версии.
         </p>
@@ -605,7 +1085,7 @@ const MainApp = () => {
       case 'administrator':
         return <AdminInterface />;
       case 'waitress':
-        return <SimpleInterface role="waitress" />;
+        return <WaitressInterface />;
       case 'kitchen':
         return <SimpleInterface role="kitchen" />;
       case 'bartender':
@@ -619,7 +1099,7 @@ const MainApp = () => {
     <div className="relative">
       <button
         onClick={logout}
-        className="absolute top-4 right-4 z-50 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+        className="absolute top-4 right-4 z-50 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 font-medium"
       >
         Выйти
       </button>

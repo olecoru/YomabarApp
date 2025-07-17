@@ -1493,11 +1493,11 @@ const MainApp = () => {
       case 'waitress':
         return <WaitressInterface />;
       case 'kitchen':
-        return <SimpleInterface role="kitchen" user={user} />;
+        return <KitchenInterface />;
       case 'bartender':
-        return <SimpleInterface role="bartender" user={user} />;
+        return <BarInterface />;
       case 'administrator':
-        return <SimpleInterface role="administrator" user={user} />;
+        return <AdminInterface />;
       default:
         return <div>Неизвестная роль</div>;
     }

@@ -1060,9 +1060,9 @@ const AdminInterface = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            {order.items.map((item, index) => (
+                            {(order.items || []).map((item, index) => (
                               <div key={index} className="flex justify-between">
-                                <span>{item.menu_item_name}</span>
+                                <span>{item.menu_item_name || item.name}</span>
                                 <span>×{item.quantity}</span>
                               </div>
                             ))}

@@ -789,15 +789,16 @@ const WaitressInterface = () => {
 // Admin Interface
 const AdminInterface = () => {
   const { user } = React.useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState("categories");
+  const [activeTab, setActiveTab] = useState("orders");
   const [categories, setCategories] = useState([]);
   const [users, setUsers] = useState([]);
   const [menu, setMenu] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Category management
   const [newCategory, setNewCategory] = useState({
-    name: "", display_name: "", emoji: "", description: "", sort_order: 1
+    name: "", display_name: "", emoji: "", description: "", department: "kitchen", sort_order: 1
   });
 
   // User management
@@ -805,10 +806,16 @@ const AdminInterface = () => {
     username: "", password: "", role: "waitress", full_name: "", email: "", phone: ""
   });
 
+  // Menu item management
+  const [newMenuItem, setNewMenuItem] = useState({
+    name: "", description: "", price: "", category_id: "", item_type: "food"
+  });
+
   useEffect(() => {
     fetchCategories();
     fetchUsers();
     fetchMenu();
+    fetchOrders();
   }, []);
 
   const fetchCategories = async () => {
@@ -838,6 +845,15 @@ const AdminInterface = () => {
     }
   };
 
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/orders`);
+      setOrders(response.data);
+    } catch (error) {
+      console.error("Ошибка загрузки заказов:", error);
+    }
+  };
+
   const addCategory = async () => {
     if (!newCategory.name || !newCategory.display_name || !newCategory.emoji) {
       alert("Пожалуйста, заполните все обязательные поля");
@@ -847,7 +863,7 @@ const AdminInterface = () => {
     setLoading(true);
     try {
       await axios.post(`${API}/categories`, newCategory);
-      setNewCategory({ name: "", display_name: "", emoji: "", description: "", sort_order: 1 });
+      setNewCategory({ name: "", display_name: "", emoji: "", description: "", department: "kitchen", sort_order: 1 });
       fetchCategories();
     } catch (error) {
       alert("Ошибка: " + (error.response?.data?.detail || "Не удалось добавить категорию"));
@@ -869,6 +885,27 @@ const AdminInterface = () => {
       fetchUsers();
     } catch (error) {
       alert("Ошибка: " + (error.response?.data?.detail || "Не удалось добавить пользователя"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addMenuItem = async () => {
+    if (!newMenuItem.name || !newMenuItem.description || !newMenuItem.price || !newMenuItem.category_id) {
+      alert("Пожалуйста, заполните все обязательные поля");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/menu`, {
+        ...newMenuItem,
+        price: parseFloat(newMenuItem.price)
+      });
+      setNewMenuItem({ name: "", description: "", price: "", category_id: "", item_type: "food" });
+      fetchMenu();
+    } catch (error) {
+      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось добавить блюдо"));
     } finally {
       setLoading(false);
     }
@@ -896,6 +933,26 @@ const AdminInterface = () => {
     }
   };
 
+  const deleteMenuItem = async (itemId) => {
+    if (window.confirm("Вы уверены, что хотите удалить это блюдо?")) {
+      try {
+        await axios.delete(`${API}/menu/${itemId}`);
+        fetchMenu();
+      } catch (error) {
+        alert("Ошибка: " + (error.response?.data?.detail || "Не удалось удалить блюдо"));
+      }
+    }
+  };
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    try {
+      await axios.put(`${API}/orders/${orderId}`, { status: newStatus });
+      fetchOrders();
+    } catch (error) {
+      alert("Ошибка при обновлении статуса заказа");
+    }
+  };
+
   const getRoleDisplayName = (role) => {
     const roleNames = {
       'waitress': 'Официант',
@@ -904,6 +961,32 @@ const AdminInterface = () => {
       'administrator': 'Администратор'
     };
     return roleNames[role] || role;
+  };
+
+  const getDepartmentDisplayName = (department) => {
+    return department === 'kitchen' ? 'Кухня' : 'Бар';
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed': return 'bg-blue-100 text-blue-800';
+      case 'preparing': return 'bg-orange-100 text-orange-800';
+      case 'ready': return 'bg-green-100 text-green-800';
+      case 'served': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'Ожидание';
+      case 'confirmed': return 'Подтверждён';
+      case 'preparing': return 'Готовится';
+      case 'ready': return 'Готов';
+      case 'served': return 'Подан';
+      default: return status;
+    }
   };
 
   return (
@@ -917,22 +1000,28 @@ const AdminInterface = () => {
             </div>
             <div className="flex space-x-4">
               <button
+                onClick={() => setActiveTab("orders")}
+                className={`px-4 py-2 rounded-md font-medium ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+              >
+                Заказы
+              </button>
+              <button
                 onClick={() => setActiveTab("categories")}
                 className={`px-4 py-2 rounded-md font-medium ${activeTab === "categories" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
               >
                 Категории
               </button>
               <button
-                onClick={() => setActiveTab("users")}
-                className={`px-4 py-2 rounded-md font-medium ${activeTab === "users" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-              >
-                Пользователи
-              </button>
-              <button
                 onClick={() => setActiveTab("menu")}
                 className={`px-4 py-2 rounded-md font-medium ${activeTab === "menu" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
               >
                 Меню
+              </button>
+              <button
+                onClick={() => setActiveTab("users")}
+                className={`px-4 py-2 rounded-md font-medium ${activeTab === "users" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+              >
+                Пользователи
               </button>
             </div>
           </div>
@@ -941,6 +1030,73 @@ const AdminInterface = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
+        {activeTab === "orders" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">📋 Управление Заказами</h2>
+            
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Заказ</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Клиент</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Блюда</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сумма</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {orders.map((order) => (
+                      <tr key={order.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">Стол {order.table_number}</div>
+                          <div className="text-sm text-gray-500">{new Date(order.created_at).toLocaleString('ru-RU')}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{order.customer_name}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            {order.items.map((item, index) => (
+                              <div key={index} className="flex justify-between">
+                                <span>{item.menu_item_name}</span>
+                                <span>×{item.quantity}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">${order.total.toFixed(2)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(order.status)}`}>
+                            {getStatusText(order.status)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <select
+                            value={order.status}
+                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                            className="text-sm border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500"
+                          >
+                            <option value="pending">Ожидание</option>
+                            <option value="confirmed">Подтверждён</option>
+                            <option value="preparing">Готовится</option>
+                            <option value="ready">Готов</option>
+                            <option value="served">Подан</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === "categories" && (
           <div>
             <h2 className="text-xl font-bold mb-4">✨ Управление Категориями</h2>
@@ -976,6 +1132,14 @@ const AdminInterface = () => {
                   onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
                   className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
+                <select
+                  value={newCategory.department}
+                  onChange={(e) => setNewCategory({...newCategory, department: e.target.value})}
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="kitchen">Кухня</option>
+                  <option value="bar">Бар</option>
+                </select>
                 <input
                   type="number"
                   placeholder="Порядок сортировки"
@@ -999,6 +1163,7 @@ const AdminInterface = () => {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Отображение</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Отдел</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                   </tr>
@@ -1019,6 +1184,13 @@ const AdminInterface = () => {
                         {category.display_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          category.department === 'kitchen' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {getDepartmentDisplayName(category.department)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded text-xs ${
                           category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
@@ -1028,6 +1200,119 @@ const AdminInterface = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => deleteCategory(category.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Удалить
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "menu" && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">🍽️ Управление Меню</h2>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              <h3 className="text-lg font-semibold mb-4">Добавить Новое Блюдо</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Название блюда"
+                  value={newMenuItem.name}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, name: e.target.value})}
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Описание блюда"
+                  value={newMenuItem.description}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, description: e.target.value})}
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Цена"
+                  value={newMenuItem.price}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, price: e.target.value})}
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+                <select
+                  value={newMenuItem.category_id}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, category_id: e.target.value})}
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="">Выберите категорию</option>
+                  {categories.filter(cat => cat.is_active).map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.emoji} {category.display_name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={newMenuItem.item_type}
+                  onChange={(e) => setNewMenuItem({...newMenuItem, item_type: e.target.value})}
+                  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="food">Еда</option>
+                  <option value="drink">Напиток</option>
+                </select>
+                <button
+                  onClick={addMenuItem}
+                  disabled={loading}
+                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 disabled:bg-gray-400"
+                >
+                  {loading ? "Добавление..." : "Добавить Блюдо"}
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Блюдо</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {menu.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                        <div className="text-sm text-gray-500">{item.description}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <span className="text-lg mr-2">{item.category_emoji}</span>
+                          <span className="text-sm text-gray-900">{item.category_display_name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${item.price.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.item_type === 'food' ? 'Еда' : 'Напиток'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {item.available ? 'Доступно' : 'Недоступно'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => deleteMenuItem(item.id)}
                           className="text-red-600 hover:text-red-900"
                         >
                           Удалить
@@ -1133,54 +1418,6 @@ const AdminInterface = () => {
                         >
                           Удалить
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "menu" && (
-          <div>
-            <h2 className="text-xl font-bold mb-4">🍽️ Меню с Динамическими Категориями</h2>
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Блюдо</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Категория</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цена</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {menu.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                        <div className="text-sm text-gray-500">{item.description}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className="text-lg mr-2">{item.category_emoji}</span>
-                          <span className="text-sm text-gray-900">{item.category_display_name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${item.price.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.item_type === 'food' ? 'Еда' : 'Напиток'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {item.available ? 'Доступно' : 'Недоступно'}
-                        </span>
                       </td>
                     </tr>
                   ))}

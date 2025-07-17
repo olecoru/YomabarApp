@@ -593,6 +593,269 @@ class EnhancedRestaurantTester:
                     self.log_test("DELETE test category cleanup", False, f"Cleanup failed: HTTP {response.status_code}")
             except Exception as e:
                 self.log_test("DELETE test category cleanup", False, f"Cleanup failed: {str(e)}")
+                
+    def test_multi_client_order_system(self):
+        """Test Multi-Client Order System - PRIORITY TASK"""
+        print("\n=== TESTING MULTI-CLIENT ORDER SYSTEM (PRIORITY) ===")
+        
+        if not self.menu_items:
+            # Get menu items if not already loaded
+            if "waitress" in self.tokens:
+                self.set_auth_header("waitress")
+                menu_response = self.session.get(f"{BACKEND_URL}/menu")
+                if menu_response.status_code == 200:
+                    self.menu_items = menu_response.json()
+        
+        # Test 1: Create order with multiple clients per table
+        if "waitress" in self.tokens and self.menu_items:
+            try:
+                self.set_auth_header("waitress")
+                
+                # Get food and drink items for testing
+                food_items = [item for item in self.menu_items if item["item_type"] == "food"][:3]
+                drink_items = [item for item in self.menu_items if item["item_type"] == "drink"][:3]
+                
+                if len(food_items) >= 2 and len(drink_items) >= 2:
+                    # Create order with 3 clients for quiz team scenario
+                    clients = [
+                        {
+                            "client_number": 1,
+                            "items": [
+                                {
+                                    "menu_item_id": food_items[0]["id"],
+                                    "menu_item_name": food_items[0]["name"],
+                                    "quantity": 1,
+                                    "price": food_items[0]["price"],
+                                    "item_type": food_items[0]["item_type"],
+                                    "special_instructions": "Client 1 - no onions"
+                                },
+                                {
+                                    "menu_item_id": drink_items[0]["id"],
+                                    "menu_item_name": drink_items[0]["name"],
+                                    "quantity": 1,
+                                    "price": drink_items[0]["price"],
+                                    "item_type": drink_items[0]["item_type"]
+                                }
+                            ],
+                            "subtotal": food_items[0]["price"] + drink_items[0]["price"]
+                        },
+                        {
+                            "client_number": 2,
+                            "items": [
+                                {
+                                    "menu_item_id": food_items[1]["id"],
+                                    "menu_item_name": food_items[1]["name"],
+                                    "quantity": 1,
+                                    "price": food_items[1]["price"],
+                                    "item_type": food_items[1]["item_type"],
+                                    "special_instructions": "Client 2 - extra sauce"
+                                },
+                                {
+                                    "menu_item_id": drink_items[1]["id"],
+                                    "menu_item_name": drink_items[1]["name"],
+                                    "quantity": 2,
+                                    "price": drink_items[1]["price"],
+                                    "item_type": drink_items[1]["item_type"]
+                                }
+                            ],
+                            "subtotal": food_items[1]["price"] + (drink_items[1]["price"] * 2)
+                        },
+                        {
+                            "client_number": 3,
+                            "items": [
+                                {
+                                    "menu_item_id": drink_items[0]["id"],
+                                    "menu_item_name": drink_items[0]["name"],
+                                    "quantity": 1,
+                                    "price": drink_items[0]["price"],
+                                    "item_type": drink_items[0]["item_type"]
+                                }
+                            ],
+                            "subtotal": drink_items[0]["price"]
+                        }
+                    ]
+                    
+                    total_amount = sum(client["subtotal"] for client in clients)
+                    
+                    order_data = {
+                        "table_number": 15,
+                        "clients": clients,
+                        "special_notes": "Quiz team table - 3 players"
+                    }
+                    
+                    response = self.session.post(f"{BACKEND_URL}/orders", json=order_data)
+                    
+                    if response.status_code == 200:
+                        created_order = response.json()
+                        self.created_order_id = created_order["id"]
+                        
+                        # Verify order structure
+                        if (len(created_order["clients"]) == 3 and 
+                            created_order["table_number"] == 15 and
+                            abs(created_order["total_amount"] - total_amount) < 0.01):
+                            self.log_test("POST /api/orders (multi-client)", True, 
+                                        f"Successfully created order with 3 clients, total: ${created_order['total_amount']:.2f}")
+                        else:
+                            self.log_test("POST /api/orders (multi-client)", False, 
+                                        f"Order structure incorrect: {len(created_order['clients'])} clients, total: {created_order['total_amount']}")
+                    else:
+                        self.log_test("POST /api/orders (multi-client)", False, f"HTTP {response.status_code}: {response.text}")
+                else:
+                    self.log_test("POST /api/orders (multi-client)", False, "Insufficient menu items for multi-client test")
+            except Exception as e:
+                self.log_test("POST /api/orders (multi-client)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: Verify individual client tracking within order
+        if self.created_order_id and "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/orders/table/15")
+                
+                if response.status_code == 200:
+                    table_orders = response.json()
+                    if table_orders:
+                        order = table_orders[0]
+                        
+                        # Check client structure
+                        clients_have_ids = all("client_id" in client for client in order["clients"])
+                        clients_have_numbers = all("client_number" in client for client in order["clients"])
+                        clients_have_subtotals = all("subtotal" in client for client in order["clients"])
+                        
+                        if clients_have_ids and clients_have_numbers and clients_have_subtotals:
+                            self.log_test("Multi-client order structure", True, 
+                                        f"Order has proper client structure with IDs, numbers, and subtotals")
+                        else:
+                            self.log_test("Multi-client order structure", False, 
+                                        f"Missing client fields: IDs={clients_have_ids}, Numbers={clients_have_numbers}, Subtotals={clients_have_subtotals}")
+                    else:
+                        self.log_test("Multi-client order structure", False, "No orders found for table 15")
+                else:
+                    self.log_test("Multi-client order structure", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Multi-client order structure", False, f"Request failed: {str(e)}")
+        
+        # Test 3: Update individual client status
+        if self.created_order_id and "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                # Get the order to find client IDs
+                order_response = self.session.get(f"{BACKEND_URL}/orders/table/15")
+                if order_response.status_code == 200:
+                    orders = order_response.json()
+                    if orders:
+                        order = orders[0]
+                        if order["clients"]:
+                            client_id = order["clients"][0]["client_id"]
+                            
+                            # Update client status
+                            status_update = {"status": "confirmed"}
+                            response = self.session.put(f"{BACKEND_URL}/orders/{order['id']}/client/{client_id}", json=status_update)
+                            
+                            if response.status_code == 200:
+                                updated_order = response.json()
+                                client_updated = any(client["client_id"] == client_id and client["status"] == "confirmed" 
+                                                   for client in updated_order["clients"])
+                                if client_updated:
+                                    self.log_test("PUT /api/orders/{order_id}/client/{client_id}", True, "Successfully updated individual client status")
+                                else:
+                                    self.log_test("PUT /api/orders/{order_id}/client/{client_id}", False, "Client status not updated correctly")
+                            else:
+                                self.log_test("PUT /api/orders/{order_id}/client/{client_id}", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("PUT /api/orders/{order_id}/client/{client_id}", False, f"Request failed: {str(e)}")
+        
+        # Test 4: Verify team-based ordering suitable for quiz environment
+        if "waitress" in self.tokens and self.menu_items:
+            try:
+                self.set_auth_header("waitress")
+                
+                # Create a larger team order (5 clients) to simulate quiz team
+                food_items = [item for item in self.menu_items if item["item_type"] == "food"][:2]
+                drink_items = [item for item in self.menu_items if item["item_type"] == "drink"][:2]
+                
+                if food_items and drink_items:
+                    clients = []
+                    for i in range(1, 6):  # 5 clients
+                        client = {
+                            "client_number": i,
+                            "items": [
+                                {
+                                    "menu_item_id": drink_items[i % len(drink_items)]["id"],
+                                    "menu_item_name": drink_items[i % len(drink_items)]["name"],
+                                    "quantity": 1,
+                                    "price": drink_items[i % len(drink_items)]["price"],
+                                    "item_type": drink_items[i % len(drink_items)]["item_type"]
+                                }
+                            ],
+                            "subtotal": drink_items[i % len(drink_items)]["price"]
+                        }
+                        
+                        # Add food for some clients
+                        if i <= 3:
+                            food_item = {
+                                "menu_item_id": food_items[i % len(food_items)]["id"],
+                                "menu_item_name": food_items[i % len(food_items)]["name"],
+                                "quantity": 1,
+                                "price": food_items[i % len(food_items)]["price"],
+                                "item_type": food_items[i % len(food_items)]["item_type"]
+                            }
+                            client["items"].append(food_item)
+                            client["subtotal"] += food_items[i % len(food_items)]["price"]
+                        
+                        clients.append(client)
+                    
+                    team_order_data = {
+                        "table_number": 20,
+                        "clients": clients,
+                        "special_notes": "Quiz team - 5 players, mixed orders"
+                    }
+                    
+                    response = self.session.post(f"{BACKEND_URL}/orders", json=team_order_data)
+                    
+                    if response.status_code == 200:
+                        team_order = response.json()
+                        if len(team_order["clients"]) == 5:
+                            self.log_test("Team-based ordering (quiz environment)", True, 
+                                        f"Successfully created team order with 5 clients for quiz environment")
+                        else:
+                            self.log_test("Team-based ordering (quiz environment)", False, 
+                                        f"Expected 5 clients, got {len(team_order['clients'])}")
+                    else:
+                        self.log_test("Team-based ordering (quiz environment)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Team-based ordering (quiz environment)", False, f"Request failed: {str(e)}")
+        
+        # Test 5: Verify unified order management despite multiple clients
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/orders")
+                
+                if response.status_code == 200:
+                    all_orders = response.json()
+                    multi_client_orders = [order for order in all_orders if len(order.get("clients", [])) > 1]
+                    
+                    if multi_client_orders:
+                        # Check that orders maintain unified structure
+                        unified_structure = all(
+                            "total_amount" in order and 
+                            "table_number" in order and 
+                            "waitress_name" in order and
+                            isinstance(order["clients"], list)
+                            for order in multi_client_orders
+                        )
+                        
+                        if unified_structure:
+                            self.log_test("Unified order management", True, 
+                                        f"Found {len(multi_client_orders)} multi-client orders with unified structure")
+                        else:
+                            self.log_test("Unified order management", False, "Multi-client orders missing unified structure fields")
+                    else:
+                        self.log_test("Unified order management", True, "No multi-client orders found (expected if none created)")
+                else:
+                    self.log_test("Unified order management", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Unified order management", False, f"Request failed: {str(e)}")
                     
     def test_enhanced_order_management(self):
         """Test enhanced order management with multiple clients per table"""

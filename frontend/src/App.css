@@ -139,16 +139,17 @@
   
   /* YomaBar logo responsive */
   .yoma-logo {
-    width: 100px;
-    height: 100px;
+    width: 110px;
+    height: 110px;
+    padding: 1.25rem;
   }
   
   .yoma-logo h1 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
   
   .yoma-logo p {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
 }
 

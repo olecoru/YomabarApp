@@ -1578,12 +1578,28 @@ class EnhancedRestaurantTester:
         
     def run_all_tests(self):
         """Run all enhanced restaurant management system tests"""
-        print(f"🚀 Starting Enhanced Restaurant Management System Backend Tests")
+        print(f"🚀 Starting YomaBar Restaurant Management System Backend Tests")
         print(f"Backend URL: {BACKEND_URL}")
         print(f"Test started at: {datetime.now().isoformat()}")
         
-        # Run tests in logical order
+        # Run authentication first
         self.test_authentication_system()
+        
+        # Run PRIORITY TESTS for current focus tasks
+        print("\n" + "="*80)
+        print("🎯 RUNNING PRIORITY TESTS FOR CURRENT FOCUS TASKS")
+        print("="*80)
+        
+        self.test_menu_management_api_endpoints()
+        self.test_department_based_order_filtering()
+        self.test_enhanced_categories_with_department_support()
+        self.test_multi_client_order_system()
+        
+        # Run other existing tests
+        print("\n" + "="*80)
+        print("🔄 RUNNING ADDITIONAL SYSTEM TESTS")
+        print("="*80)
+        
         self.test_dynamic_categories_management()
         self.test_enhanced_user_management()
         self.test_enhanced_menu_system()
@@ -1595,7 +1611,7 @@ class EnhancedRestaurantTester:
         
         # Print summary
         print("\n" + "="*80)
-        print("ENHANCED RESTAURANT MANAGEMENT SYSTEM TEST SUMMARY")
+        print("YOMABAR RESTAURANT MANAGEMENT SYSTEM TEST SUMMARY")
         print("="*80)
         
         passed_tests = [test for test in self.test_results if test['success']]
@@ -1605,9 +1621,24 @@ class EnhancedRestaurantTester:
         print(f"❌ FAILED: {len(failed_tests)}")
         print(f"📊 TOTAL: {len(self.test_results)}")
         
+        # Separate priority test results
+        priority_keywords = ["PRIORITY", "Menu Management API", "Department-Based Order", "Enhanced Categories with Department", "Multi-Client Order"]
+        priority_tests = [test for test in self.test_results if any(keyword in test['test'] for keyword in priority_keywords)]
+        priority_passed = [test for test in priority_tests if test['success']]
+        priority_failed = [test for test in priority_tests if not test['success']]
+        
+        print(f"\n🎯 PRIORITY TESTS SUMMARY:")
+        print(f"✅ PRIORITY PASSED: {len(priority_passed)}")
+        print(f"❌ PRIORITY FAILED: {len(priority_failed)}")
+        
         if failed_tests:
             print("\n❌ FAILED TESTS:")
             for test in failed_tests:
+                print(f"  - {test['test']}: {test['message']}")
+                
+        if priority_failed:
+            print("\n🚨 PRIORITY FAILED TESTS:")
+            for test in priority_failed:
                 print(f"  - {test['test']}: {test['message']}")
                 
         print(f"\nTest completed at: {datetime.now().isoformat()}")

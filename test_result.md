@@ -272,15 +272,18 @@ backend:
 
   - task: "Enhanced Categories with Department Support"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Enhanced Category model with department field (kitchen/bar). Updated category creation to include department assignment. Modified default categories to include department information. Categories now properly route orders to appropriate departments."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED CATEGORIES WITH DEPARTMENT SUPPORT FULLY WORKING: GET /api/categories returns categories with department field properly set (kitchen/bar). POST /api/categories successfully creates categories with department assignment. PUT /api/categories/{id} properly updates department field. Menu items correctly route to departments based on category assignment. Default categories have correct department assignments (appetizers/main_dishes/desserts → kitchen, beverages/cocktails → bar). Category-based order routing working correctly for department filtering."
 
   - task: "Multi-Client Order System"
     implemented: true

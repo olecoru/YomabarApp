@@ -333,7 +333,7 @@ frontend:
         
   - task: "Order Status Management"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 1
     priority: "high"
@@ -345,6 +345,21 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL JAVASCRIPT ERROR: Kitchen and Bar interfaces fail to load due to 'Cannot read properties of undefined (reading 'map')' error in KitchenInterface component. Admin interface also affected by same error. Login screen and Waitress interface work perfectly, but other role interfaces crash with runtime errors."
+      - working: true
+        agent: "testing"
+        comment: "✅ CRITICAL SUCCESS: JavaScript 'map()' error FIXED! Kitchen and Bar interfaces now load perfectly without errors. Both interfaces display orders correctly with Russian localization, status buttons, and proper grid layout. Waitress interface also working with table selection and order creation. The original 'Cannot read properties of undefined (reading 'map')' error has been completely resolved. Minor: Admin interface has new 'toFixed()' error in price calculations, but core Kitchen/Bar functionality restored."
+
+  - task: "Admin Interface Price Calculation Fix"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ NEW ISSUE DISCOVERED: Admin interface shows 'Cannot read properties of undefined (reading 'toFixed')' error in AdminInterface component. This appears to be a price calculation issue where a price value is undefined when trying to format with toFixed() method. Kitchen and Bar interfaces work perfectly, but Admin interface needs price handling fix."
         
   - task: "Mobile-Responsive UI"
     implemented: true

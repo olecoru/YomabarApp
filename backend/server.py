@@ -762,20 +762,17 @@ async def create_order(order_data: SimpleOrderCreate, current_user: User = Depen
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create order: {str(e)}")
 
-@api_router.get("/orders", response_model=List[Order])
+@api_router.get("/orders")
 async def get_orders(current_user: User = Depends(get_current_user)):
     """Get orders based on user role"""
     if current_user.role == UserRole.WAITRESS:
         # Waitress sees only their own orders
         orders = await db.orders.find({"waitress_id": current_user.id}).sort("created_at", -1).to_list(1000)
-    elif current_user.role in [UserRole.KITCHEN, UserRole.BARTENDER]:
-        # Kitchen and bartender see all orders
-        orders = await db.orders.find().sort("created_at", -1).to_list(1000)
     else:
-        # Administrator sees all orders
+        # Kitchen, bartender, and administrator see all orders
         orders = await db.orders.find().sort("created_at", -1).to_list(1000)
     
-    return [Order(**order) for order in orders]
+    return orders
 
 @api_router.get("/orders/kitchen", response_model=List[Order])
 async def get_kitchen_orders(current_user: User = Depends(require_role([UserRole.KITCHEN, UserRole.ADMINISTRATOR]))):

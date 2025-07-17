@@ -1,7 +1,7 @@
 {
-  "name": "Restaurant Management System",
-  "short_name": "RestaurantPOS",
-  "description": "Professional restaurant management system for waitresses, kitchen, bar, and administrators",
+  "name": "Система Управления Рестораном",
+  "short_name": "РесторанПОС",
+  "description": "Профессиональная система управления рестораном для официантов, кухни, бара и администраторов",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -25,6 +25,6 @@
     }
   ],
   "categories": ["business", "food", "productivity"],
-  "lang": "en-US",
+  "lang": "ru-RU",
   "dir": "ltr"
 }

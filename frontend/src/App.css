@@ -1,11 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+/* Base font family */
+* {
+  font-family: 'Rubik', sans-serif;
+}
+
+/* YomaBar Logo styling */
+.yoma-logo {
+  text-align: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(220, 38, 38, 0.3);
+  border: 3px solid #fef2f2;
+}
+
+.yoma-logo h1 {
+  color: #fef2f2 !important;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.yoma-logo p {
+  color: #fef2f2 !important;
+  font-size: 0.7rem;
+  margin: 0;
+  opacity: 0.9;
+}
 
 /* PWA Specific Styles */
 .App {
   min-height: 100vh;
   min-height: 100svh; /* For mobile browsers */
+  font-family: 'Rubik', sans-serif;
+}
+
+/* YomaBar Brand Colors */
+:root {
+  --yoma-red: #dc2626;
+  --yoma-red-dark: #b91c1c;
+  --yoma-red-light: #ef4444;
+  --yoma-cream: #fef2f2;
+  --yoma-coral: #f87171;
 }
 
 /* Mobile-first responsive design */
@@ -32,11 +80,15 @@
     min-height: 4rem;
     font-size: 0.875rem;
     padding: 0.5rem;
+    font-weight: 600;
   }
   
   /* Menu items optimized for mobile */
   .menu-item-card {
     padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
   /* Order summary optimized for mobile */
@@ -47,9 +99,24 @@
     right: 0;
     z-index: 40;
     background: white;
-    border-top: 2px solid #f97316;
+    border-top: 2px solid var(--yoma-red);
     max-height: 40vh;
     overflow-y: auto;
+    border-radius: 1rem 1rem 0 0;
+  }
+  
+  /* YomaBar logo responsive */
+  .yoma-logo {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .yoma-logo h1 {
+    font-size: 1.25rem;
+  }
+  
+  .yoma-logo p {
+    font-size: 0.6rem;
   }
 }
 
@@ -61,6 +128,9 @@
   
   .order-card {
     min-height: 200px;
+    border-radius: 0.75rem;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -71,7 +141,7 @@
   }
 }
 
-/* Category badges */
+/* Category badges with YomaBar colors */
 .category-badge {
   display: inline-flex;
   align-items: center;
@@ -80,11 +150,12 @@
   font-size: 0.75rem;
   font-weight: 600;
   margin-right: 0.5rem;
+  font-family: 'Rubik', sans-serif;
 }
 
 .category-appetizers {
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: var(--yoma-cream);
+  color: var(--yoma-red-dark);
 }
 
 .category-main-dishes {
@@ -107,23 +178,23 @@
   transition: all 0.2s ease-in-out;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar with YomaBar colors */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--yoma-cream);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--yoma-coral);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--yoma-red);
 }
 
 /* Order status color coding */
@@ -155,13 +226,13 @@
 /* Button hover effects */
 .btn-hover:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
 }
 
 /* Card hover effects */
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.15);
 }
 
 /* Loading animation */
@@ -172,6 +243,16 @@
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* YomaBar themed loading */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* PWA Install prompt animation */
@@ -188,6 +269,12 @@
 
 .pwa-install-prompt {
   animation: slideDown 0.3s ease-out;
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-light) 100%);
+  color: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 /* Touch-friendly buttons */
@@ -202,29 +289,57 @@
   align-items: center;
   justify-content: center;
   touch-action: manipulation;
+  font-family: 'Rubik', sans-serif;
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-light) 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Form styling */
+.touch-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.touch-button:active {
+  transform: translateY(0);
+}
+
+/* Form styling with YomaBar theme */
 input[type="text"],
+input[type="password"],
+input[type="email"],
 input[type="number"],
 select {
   appearance: none;
   background-color: white;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   min-height: 44px; /* Touch-friendly */
+  font-family: 'Rubik', sans-serif;
+  font-weight: 400;
 }
 
 input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
 input[type="number"]:focus,
 select:focus {
   outline: none;
-  border-color: #f97316;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+  border-color: var(--yoma-red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* Placeholder styling */
+::placeholder {
+  color: #9ca3af;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 400;
 }
 
 /* Notification styles */
@@ -238,14 +353,15 @@ select:focus {
   font-weight: 500;
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
+  font-family: 'Rubik', sans-serif;
 }
 
 .notification.success {
-  background-color: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .notification.error {
-  background-color: #ef4444;
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-dark) 100%);
 }
 
 @keyframes slideIn {
@@ -259,21 +375,25 @@ select:focus {
   }
 }
 
-/* Role-specific styling */
+/* Role-specific styling with YomaBar branding */
 .waitress-interface {
-  background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--yoma-cream) 0%, #ffffff 100%);
+  min-height: 100vh;
 }
 
 .kitchen-interface {
   background: linear-gradient(135deg, #fed7aa 0%, #ffffff 100%);
+  min-height: 100vh;
 }
 
 .bar-interface {
   background: linear-gradient(135deg, #e0e7ff 0%, #ffffff 100%);
+  min-height: 100vh;
 }
 
 .admin-interface {
-  background: linear-gradient(135deg, #f3e8ff 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--yoma-cream) 0%, #ffffff 100%);
+  min-height: 100vh;
 }
 
 /* Offline indicator */
@@ -281,12 +401,218 @@ select:focus {
   position: fixed;
   bottom: 1rem;
   left: 1rem;
-  background-color: #ef4444;
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-dark) 100%);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   z-index: 1000;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 500;
+}
+
+/* Welcome and completion phrase styling */
+.welcome-phrase, .completion-phrase {
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-light) 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  border: 2px solid var(--yoma-cream);
+}
+
+.welcome-phrase {
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-coral) 100%);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.completion-phrase {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  animation: bounce 0.6s ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+/* Table selection styling */
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.table-button {
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-light) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+  border: 2px solid transparent;
+}
+
+.table-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+  border-color: var(--yoma-cream);
+}
+
+.table-button:active {
+  transform: translateY(0);
+}
+
+/* Menu item styling */
+.menu-item {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-color: var(--yoma-red);
+}
+
+.menu-item-name {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.menu-item-description {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 400;
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.menu-item-price {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 700;
+  color: var(--yoma-red);
+  font-size: 1.125rem;
+}
+
+.menu-item-button {
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-light) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+/* Order summary styling */
+.order-summary {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--yoma-cream);
+  position: sticky;
+  top: 1rem;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-light) 100%);
+  color: white;
+  border: none;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-button:hover {
+  transform: scale(1.05);
+}
+
+.quantity-display {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 2rem;
+  text-align: center;
+}
+
+/* Submit button styling */
+.submit-button {
+  width: 100%;
+  background: linear-gradient(135deg, var(--yoma-red) 0%, var(--yoma-red-light) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Print styles */
@@ -297,5 +623,29 @@ select:focus {
   
   .print-only {
     display: block !important;
+  }
+  
+  * {
+    font-family: 'Rubik', sans-serif !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .yoma-logo {
+    border: 3px solid #000;
+  }
+  
+  .touch-button, .menu-item-button, .submit-button {
+    border: 2px solid #000;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -242,15 +242,18 @@ backend:
 
   - task: "Menu Management API Endpoints"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added comprehensive menu management endpoints: POST /api/menu (create menu item - admin only), PUT /api/menu/{item_id} (update menu item - admin only), DELETE /api/menu/{item_id} (delete menu item - admin only). All endpoints include proper validation and role-based access control."
+      - working: true
+        agent: "testing"
+        comment: "✅ MENU MANAGEMENT API ENDPOINTS FULLY WORKING: POST /api/menu successfully creates menu items with admin-only access control. PUT /api/menu/{item_id} properly updates menu items with validation. DELETE /api/menu/{item_id} correctly deletes menu items. Role-based access control working perfectly - waitress, kitchen staff, and bartender correctly denied access to admin-only endpoints (403 responses). All CRUD operations functioning correctly with proper category_id validation."
 
   - task: "Department-Based Order Filtering"
     implemented: true

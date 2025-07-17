@@ -727,26 +727,40 @@ async def get_menu_by_type(item_type: ItemType, current_user: User = Depends(get
     return result
 
 # Order endpoints
-@api_router.post("/orders", response_model=Order)
-async def create_order(order_data: OrderCreate, current_user: User = Depends(require_role([UserRole.WAITRESS, UserRole.ADMINISTRATOR]))):
-    """Create new order (waitress only)"""
-    # Calculate totals for each client
-    for client in order_data.clients:
-        client.subtotal = sum(item.price * item.quantity for item in client.items)
-    
-    total_amount = sum(client.subtotal for client in order_data.clients)
-    
-    order = Order(
-        table_number=order_data.table_number,
-        waitress_id=current_user.id,
-        waitress_name=current_user.full_name,
-        clients=order_data.clients,
-        total_amount=total_amount,
-        special_notes=order_data.special_notes
-    )
-    
-    await db.orders.insert_one(order.dict())
-    return order
+@api_router.post("/orders")
+async def create_order(order_data: SimpleOrderCreate, current_user: User = Depends(require_role([UserRole.WAITRESS, UserRole.ADMINISTRATOR]))):
+    """Create new order with simple format (waitress only)"""
+    try:
+        # Create simple order document
+        order = {
+            "id": str(uuid.uuid4()),
+            "customer_name": order_data.customer_name,
+            "table_number": order_data.table_number,
+            "items": [item.dict() for item in order_data.items],
+            "total": order_data.total,
+            "status": order_data.status,
+            "notes": order_data.notes,
+            "waitress_id": current_user.id,
+            "waitress_name": current_user.full_name,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Add menu item names to items
+        for item in order["items"]:
+            menu_item = await db.menu_items.find_one({"id": item["menu_item_id"]})
+            if menu_item:
+                item["menu_item_name"] = menu_item["name"]
+                item["item_type"] = menu_item["item_type"]
+            else:
+                item["menu_item_name"] = "Unknown Item"
+                item["item_type"] = "food"
+        
+        await db.orders.insert_one(order)
+        return {"success": True, "order_id": order["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create order: {str(e)}")
 
 @api_router.get("/orders", response_model=List[Order])
 async def get_orders(current_user: User = Depends(get_current_user)):

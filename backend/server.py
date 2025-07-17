@@ -774,27 +774,19 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     
     return orders
 
-@api_router.get("/orders/kitchen", response_model=List[Order])
+@api_router.get("/orders/kitchen")
 async def get_kitchen_orders(current_user: User = Depends(require_role([UserRole.KITCHEN, UserRole.ADMINISTRATOR]))):
     """Get orders with food items for kitchen"""
-    orders = await db.orders.find().sort("created_at", -1).to_list(1000)
+    orders = await db.orders.find({"status": {"$in": ["pending", "confirmed", "preparing"]}}).sort("created_at", 1).to_list(1000)
     
-    # Filter orders to show only those with food items
     kitchen_orders = []
     for order in orders:
-        order_obj = Order(**order)
-        # Filter clients to show only those with food items
-        filtered_clients = []
-        for client in order_obj.clients:
-            food_items = [item for item in client.items if item.item_type == ItemType.FOOD]
-            if food_items:
-                filtered_client = client.copy()
-                filtered_client.items = food_items
-                filtered_clients.append(filtered_client)
-        
-        if filtered_clients:
-            order_obj.clients = filtered_clients
-            kitchen_orders.append(order_obj)
+        # Filter items to show only food items
+        food_items = [item for item in order.get("items", []) if item.get("item_type") == "food"]
+        if food_items:
+            kitchen_order = order.copy()
+            kitchen_order["items"] = food_items
+            kitchen_orders.append(kitchen_order)
     
     return kitchen_orders
 

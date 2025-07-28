@@ -687,12 +687,26 @@ const WaitressInterface = () => {
 
                     {clients.length > 0 && (
                       <div className="border-t pt-4">
-                        <h4 className="font-semibold text-gray-900 mb-2">Итого по клиентам:</h4>
-                        <div className="space-y-1 mb-4">
+                        <h4 className="font-semibold text-gray-900 mb-3">📋 Сводка по всем клиентам:</h4>
+                        <div className="space-y-3 mb-4">
                           {clients.map(client => (
-                            <div key={client.id} className="flex justify-between text-sm">
-                              <span>{client.name}:</span>
-                              <span className="font-medium">${calculateClientTotal(client.id).toFixed(2)}</span>
+                            <div key={client.id} className="bg-white p-3 rounded-lg border">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="font-medium text-gray-900">{client.name}</span>
+                                <span className="font-semibold text-red-600">${calculateClientTotal(client.id).toFixed(2)}</span>
+                              </div>
+                              {client.order.length > 0 ? (
+                                <div className="space-y-1">
+                                  {client.order.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between text-xs text-gray-600">
+                                      <span>{item.name} x{item.quantity}</span>
+                                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-gray-400">Ничего не заказано</p>
+                              )}
                             </div>
                           ))}
                         </div>

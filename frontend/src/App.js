@@ -988,6 +988,15 @@ const KitchenInterface = () => {
     try {
       await axios.put(`${API}/orders/${orderId}`, { status: newStatus });
       fetchKitchenOrders();
+      
+      // Send notification when order is ready
+      if (newStatus === 'ready') {
+        sendLocalNotification(
+          '🍽️ YomaBar - Заказ готов!',
+          `Заказ #${orderId.slice(-8)} готов к выдаче`,
+          'waitress'
+        );
+      }
     } catch (error) {
       alert("Ошибка при обновлении статуса заказа");
     } finally {

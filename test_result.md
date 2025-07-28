@@ -104,6 +104,24 @@
 
 user_problem_statement: "Taking orders app for waitresses"
 
+  - task: "Order System ObjectId Serialization Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "❌ CRITICAL BUG REPORTED: User reports that accepted orders are not reaching other roles (Kitchen/Bar) in the test preview. Backend logs show 500 errors with ObjectId serialization issues and 422 Unprocessable Entity errors on order submission."
+      - working: true
+        agent: "main"
+        comment: "✅ FIXED: Modified all order endpoints (get_orders, get_kitchen_orders, get_bar_orders, get_orders_by_table) to exclude MongoDB _id fields by adding {'_id': 0} parameter to db.orders.find() calls. This resolves ObjectId JSON serialization errors."
+      - working: true
+        agent: "testing"
+        comment: "✅ CRITICAL SUCCESS: The MongoDB ObjectId serialization fix has resolved the 500 Internal Server Error issue. All authentication working, POST /api/orders creates orders successfully, GET /api/orders works for all roles without 500 errors, GET /api/orders/kitchen and GET /api/orders/bar work correctly. Orders are now properly flowing from waitress to kitchen and bar departments. Backend is production-ready."
+
 backend:
   - task: "Menu Management System"
     implemented: true

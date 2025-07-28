@@ -186,7 +186,29 @@ const WaitressInterface = () => {
     setWelcomePhrase(getRandomPhrase(WELCOME_PHRASES));
     fetchMenu();
     fetchCategories();
-  }, []);
+    if (activeTab === "my_orders") {
+      fetchMyOrders();
+    }
+  }, [activeTab]);
+
+  const fetchMyOrders = async () => {
+    try {
+      const response = await axios.get(`${API}/orders`);
+      setMyOrders(response.data.filter(order => order.waitress_id === user.id));
+    } catch (error) {
+      console.error("Ошибка загрузки моих заказов:", error);
+    }
+  };
+
+  const markOrderAsServed = async (orderId) => {
+    try {
+      await axios.put(`${API}/orders/${orderId}`, { status: "served" });
+      fetchMyOrders(); // Обновляем список
+      alert("Заказ помечен как отданный!");
+    } catch (error) {
+      alert("Ошибка при обновлении статуса заказа");
+    }
+  };
 
   const fetchMenu = async () => {
     try {

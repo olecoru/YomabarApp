@@ -678,8 +678,14 @@ const WaitressInterface = () => {
                             {item.category_emoji} {item.category_display_name}
                           </span>
                           <button
-                            onClick={() => addToOrder(item)}
-                            disabled={!activeClient}
+                            onClick={() => {
+                              if (clients.length === 0) {
+                                addToCurrentOrder(item);
+                              } else {
+                                addToOrder(item);
+                              }
+                            }}
+                            disabled={clients.length > 0 && !activeClient}
                             className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Добавить

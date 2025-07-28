@@ -1881,6 +1881,13 @@ class EnhancedRestaurantTester:
         # Run authentication first
         self.test_authentication_system()
         
+        # Run NEW ADMIN ORDER FILTERING FEATURES TEST FIRST
+        print("\n" + "="*80)
+        print("🎯 TESTING NEW ADMIN ORDER FILTERING FEATURES (PRIORITY)")
+        print("="*80)
+        
+        self.test_admin_order_filtering_features()
+        
         # Run PRIORITY TESTS for current focus tasks
         print("\n" + "="*80)
         print("🎯 RUNNING PRIORITY TESTS FOR CURRENT FOCUS TASKS")

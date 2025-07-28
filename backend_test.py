@@ -11,7 +11,7 @@ from datetime import datetime
 import uuid
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://055fd109-dcff-4a75-a867-732ca3399b88.preview.emergentagent.com/api"
+BACKEND_URL = "https://7ac04967-575d-4814-81b1-48f03205e31d.preview.emergentagent.com/api"
 
 class EnhancedRestaurantTester:
     def __init__(self):

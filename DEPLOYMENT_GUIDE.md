@@ -6,7 +6,7 @@ Your comprehensive restaurant management system is now deployed and ready for us
 
 ## 📱 Access Information
 
-**Live Application URL:** https://055fd109-dcff-4a75-a867-732ca3399b88.preview.emergentagent.com
+**Live Application URL:** https://7ac04967-575d-4814-81b1-48f03205e31d.preview.emergentagent.com
 
 ## 👥 Demo Accounts
 
@@ -106,7 +106,7 @@ Your comprehensive restaurant management system is now deployed and ready for us
 
 ### Current Hosting
 - **Platform:** Emergent Cloud
-- **URL:** https://055fd109-dcff-4a75-a867-732ca3399b88.preview.emergentagent.com
+- **URL:** https://7ac04967-575d-4814-81b1-48f03205e31d.preview.emergentagent.com
 - **Cost:** 50 credits/month
 - **Uptime:** 24/7 managed hosting
 

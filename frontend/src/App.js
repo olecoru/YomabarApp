@@ -1031,6 +1031,15 @@ const AdminInterface = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Фильтры заказов
+  const [orderFilters, setOrderFilters] = useState({
+    hoursBack: 24,
+    fromDate: "",
+    toDate: "",
+    includeServed: false
+  });
+  const [orderStats, setOrderStats] = useState({ totalCount: 0 });
+
   // Новая категория
   const [newCategory, setNewCategory] = useState({
     name: "", display_name: "", emoji: "", description: "", department: "kitchen", sort_order: 1
@@ -1048,13 +1057,22 @@ const AdminInterface = () => {
     fetchUsers();
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (customFilters = null) => {
     try {
-      const response = await axios.get(`${API}/orders`);
-      setOrders(Array.isArray(response.data) ? response.data : []);
+      const filters = customFilters || orderFilters;
+      let url = `${API}/orders/admin?hours_back=${filters.hoursBack}&include_served=${filters.includeServed}`;
+      
+      if (filters.fromDate && filters.toDate) {
+        url += `&from_date=${filters.fromDate}&to_date=${filters.toDate}`;
+      }
+      
+      const response = await axios.get(url);
+      setOrders(Array.isArray(response.data.orders) ? response.data.orders : []);
+      setOrderStats({ totalCount: response.data.filters.total_count });
     } catch (error) {
       console.error("Ошибка загрузки заказов:", error);
       setOrders([]);
+      setOrderStats({ totalCount: 0 });
     }
   };
 

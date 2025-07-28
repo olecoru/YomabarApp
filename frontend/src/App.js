@@ -734,6 +734,28 @@ const WaitressInterface = () => {
                       </div>
                     )}
 
+                    {/* Сводка общего заказа на стол (без клиентов) */}
+                    {clients.length === 0 && Object.keys(currentOrder).length > 0 && (
+                      <div className="border-t pt-4">
+                        <h4 className="font-semibold text-gray-900 mb-3">📋 Сводка заказа на стол:</h4>
+                        <div className="bg-white p-3 rounded-lg border mb-4">
+                          <div className="space-y-1">
+                            {Object.values(currentOrder).map((item, idx) => (
+                              <div key={idx} className="flex justify-between text-xs text-gray-600">
+                                <span>{item.name} x{item.quantity}</span>
+                                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center font-semibold text-lg mb-4 pt-2 border-t">
+                          <span>Общий итог:</span>
+                          <span className="text-red-600">${getCurrentOrderTotal().toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+
                     {clients.length > 0 && (
                       <div className="border-t pt-4">
                         <h4 className="font-semibold text-gray-900 mb-3">📋 Сводка по всем клиентам:</h4>

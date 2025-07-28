@@ -1047,6 +1047,13 @@ const WaitressInterface = () => {
                         </div>
                       </div>
                     )}
+
+                    <div className="border-t pt-2 font-semibold">
+                      Итого: ${clients.length === 0 ? 
+                        getCurrentOrderTotal().toFixed(2) : 
+                        (activeClient ? calculateClientTotal(activeClient).toFixed(2) : '0.00')
+                      }
+                    </div>
                     
                     <div className="space-y-2">
                       <button

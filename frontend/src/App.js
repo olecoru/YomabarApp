@@ -1230,11 +1230,106 @@ const AdminInterface = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">📋 Управление Заказами</h2>
             
+            {/* Фильтры заказов */}
+            <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+              <h3 className="text-lg font-semibold mb-3">🔍 Фильтры заказов</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Период по часам */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Показать заказы за:
+                  </label>
+                  <select
+                    value={orderFilters.hoursBack}
+                    onChange={(e) => updateOrderFilters({ 
+                      hoursBack: parseInt(e.target.value),
+                      fromDate: "",
+                      toDate: ""
+                    })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value={6}>Последние 6 часов</option>
+                    <option value={12}>Последние 12 часов</option>
+                    <option value={24}>Последние 24 часа</option>
+                    <option value={48}>Последние 2 дня</option>
+                    <option value={168}>Последняя неделя</option>
+                  </select>
+                </div>
+
+                {/* Дата от */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Дата от:
+                  </label>
+                  <input
+                    type="date"
+                    value={orderFilters.fromDate}
+                    onChange={(e) => updateOrderFilters({ 
+                      fromDate: e.target.value,
+                      hoursBack: 24 // сброс hours_back при выборе конкретной даты
+                    })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Дата до */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Дата до:
+                  </label>
+                  <input
+                    type="date"
+                    value={orderFilters.toDate}
+                    onChange={(e) => updateOrderFilters({ 
+                      toDate: e.target.value,
+                      hoursBack: 24 // сброс hours_back при выборе конкретной даты
+                    })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+
+                {/* Быстрые действия */}
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => updateOrderFilters({
+                      hoursBack: 24,
+                      fromDate: getTodayDate(),
+                      toDate: getTodayDate()
+                    })}
+                    className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
+                  >
+                    📅 Только сегодня
+                  </button>
+                  
+                  <button
+                    onClick={toggleServedOrders}
+                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                      orderFilters.includeServed
+                        ? 'bg-gray-500 hover:bg-gray-600 text-white'
+                        : 'bg-green-500 hover:bg-green-600 text-white'
+                    }`}
+                  >
+                    {orderFilters.includeServed ? '👁️ Скрыть отданные' : '👁️ Показать отданные'}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-3 text-sm text-gray-600">
+                Найдено заказов: <strong>{orderStats.totalCount}</strong>
+                {!orderFilters.includeServed && " (исключая отданные)"}
+              </div>
+            </div>
+            
             {orders.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow-lg">
                 <div className="text-6xl mb-4">📋</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Нет заказов</h3>
-                <p className="text-gray-600">Заказы появятся здесь</p>
+                <p className="text-gray-600">
+                  {orderFilters.includeServed 
+                    ? "Заказы в выбранном периоде не найдены" 
+                    : "Нет активных заказов в выбранном периоде. Попробуйте включить отданные заказы."}
+                </p>
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-md overflow-hidden">

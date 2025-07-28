@@ -791,12 +791,37 @@ const WaitressInterface = () => {
                       <label className="block text-sm font-medium text-gray-700">
                         Клиенты за столом
                       </label>
-                      <button
-                        onClick={addClient}
-                        className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors"
-                      >
-                        + Добавить клиента
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={addClient}
+                          className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors"
+                        >
+                          + Добавить клиента
+                        </button>
+                        {clients.length > 0 && (
+                          <button
+                            onClick={() => {
+                              // Перенести все заказы клиентов в общий заказ
+                              const allClientOrders = {};
+                              clients.forEach(client => {
+                                client.order.forEach(item => {
+                                  if (allClientOrders[item.id]) {
+                                    allClientOrders[item.id].quantity += item.quantity;
+                                  } else {
+                                    allClientOrders[item.id] = { ...item };
+                                  }
+                                });
+                              });
+                              setCurrentOrder(allClientOrders);
+                              setClients([]);
+                              setActiveClient(null);
+                            }}
+                            className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors"
+                          >
+                            📋 Общий заказ
+                          </button>
+                        )}
+                      </div>
                     </div>
                     
                     {clients.length > 0 && (

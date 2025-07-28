@@ -1103,6 +1103,24 @@ const AdminInterface = () => {
     }
   };
 
+  // Обновление фильтров заказов
+  const updateOrderFilters = (newFilters) => {
+    const updatedFilters = { ...orderFilters, ...newFilters };
+    setOrderFilters(updatedFilters);
+    fetchOrders(updatedFilters);
+  };
+
+  // Сегодня для быстрого доступа
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  // Переключение показа отданных заказов
+  const toggleServedOrders = () => {
+    updateOrderFilters({ includeServed: !orderFilters.includeServed });
+  };
+
   const addCategory = async () => {
     if (!newCategory.name || !newCategory.display_name || !newCategory.emoji) {
       alert("Пожалуйста, заполните все обязательные поля");

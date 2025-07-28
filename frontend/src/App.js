@@ -926,7 +926,8 @@ const WaitressInterface = () => {
                 <div className="lg:col-span-1">
                   <div className="bg-gray-50 p-4 rounded-lg sticky top-4">
                     <h3 className="font-semibold text-gray-900 mb-4">
-                      Заказ{currentClient ? ` - ${currentClient.name}` : ''}
+                      {clients.length === 0 ? "📋 Общий заказ на стол" : 
+                       currentClient ? `Заказ - ${currentClient.name}` : "Заказ"}
                     </h3>
                     
                     {!activeClient ? (

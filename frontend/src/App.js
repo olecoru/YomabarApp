@@ -1281,12 +1281,12 @@ const AdminInterface = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">📋 Управление Заказами</h2>
             
-            {/* Фильтры заказов */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-              <h3 className="text-lg font-semibold mb-3">🔍 Фильтры заказов</h3>
+            {/* Мобильно-дружественные фильтры заказов */}
+            <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4">
+              <h3 className="text-base sm:text-lg font-semibold mb-3">🔍 Фильтры заказов</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Период по часам */}
+              <div className="filters-mobile">
+                {/* Основные фильтры */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Показать заказы за:
@@ -1308,40 +1308,41 @@ const AdminInterface = () => {
                   </select>
                 </div>
 
-                {/* Дата от */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Дата от:
-                  </label>
-                  <input
-                    type="date"
-                    value={orderFilters.fromDate}
-                    onChange={(e) => updateOrderFilters({ 
-                      fromDate: e.target.value,
-                      hoursBack: 24 // сброс hours_back при выборе конкретной даты
-                    })}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  />
+                {/* Даты */}
+                <div className="filter-row-mobile">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Дата от:
+                    </label>
+                    <input
+                      type="date"
+                      value={orderFilters.fromDate}
+                      onChange={(e) => updateOrderFilters({ 
+                        fromDate: e.target.value,
+                        hoursBack: 24
+                      })}
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Дата до:
+                    </label>
+                    <input
+                      type="date"
+                      value={orderFilters.toDate}
+                      onChange={(e) => updateOrderFilters({ 
+                        toDate: e.target.value,
+                        hoursBack: 24
+                      })}
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
                 </div>
 
-                {/* Дата до */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Дата до:
-                  </label>
-                  <input
-                    type="date"
-                    value={orderFilters.toDate}
-                    onChange={(e) => updateOrderFilters({ 
-                      toDate: e.target.value,
-                      hoursBack: 24 // сброс hours_back при выборе конкретной даты
-                    })}
-                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* Быстрые действия */}
-                <div className="flex flex-col gap-2">
+                {/* Быстрые кнопки */}
+                <div className="filter-buttons-mobile">
                   <button
                     onClick={() => updateOrderFilters({
                       hoursBack: 24,
@@ -1350,7 +1351,7 @@ const AdminInterface = () => {
                     })}
                     className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
                   >
-                    📅 Только сегодня
+                    📅 Сегодня
                   </button>
                   
                   <button
@@ -1364,13 +1365,12 @@ const AdminInterface = () => {
                     {orderFilters.includeServed ? '👁️ Скрыть отданные' : '👁️ Показать отданные'}
                   </button>
                 </div>
+                
+                <div className="text-sm text-gray-600">
+                  Найдено заказов: <strong>{orderStats.totalCount}</strong>
+                  {!orderFilters.includeServed && " (исключая отданные)"}
+                </div>
               </div>
-              
-              <div className="mt-3 text-sm text-gray-600">
-                Найдено заказов: <strong>{orderStats.totalCount}</strong>
-                {!orderFilters.includeServed && " (исключая отданные)"}
-              </div>
-            </div>
             
             {orders.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow-lg">

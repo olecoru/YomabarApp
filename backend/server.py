@@ -774,6 +774,50 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     
     return orders
 
+@api_router.get("/orders/admin")
+async def get_admin_orders(
+    current_user: User = Depends(require_role([UserRole.ADMINISTRATOR])),
+    hours_back: int = Query(24, description="Hours back from now to show orders (default: 24)"),
+    from_date: Optional[str] = Query(None, description="Start date in YYYY-MM-DD format"),
+    to_date: Optional[str] = Query(None, description="End date in YYYY-MM-DD format"),
+    include_served: bool = Query(False, description="Include orders with 'served' status (default: false)")
+):
+    """Get orders for administrator with filtering options"""
+    
+    # Build date filter
+    query_filter = {}
+    
+    if from_date and to_date:
+        # Use specific date range
+        try:
+            start_date = datetime.strptime(from_date, "%Y-%m-%d")
+            end_date = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)  # Include full end date
+            query_filter["created_at"] = {"$gte": start_date, "$lt": end_date}
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    else:
+        # Use hours_back from current time
+        cutoff_time = datetime.utcnow() - timedelta(hours=hours_back)
+        query_filter["created_at"] = {"$gte": cutoff_time}
+    
+    # Add status filter
+    if not include_served:
+        query_filter["status"] = {"$ne": "served"}
+    
+    # Get filtered orders
+    orders = await db.orders.find(query_filter, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    return {
+        "orders": orders,
+        "filters": {
+            "hours_back": hours_back,
+            "from_date": from_date,
+            "to_date": to_date,
+            "include_served": include_served,
+            "total_count": len(orders)
+        }
+    }
+
 @api_router.get("/orders/kitchen")
 async def get_kitchen_orders(current_user: User = Depends(require_role([UserRole.KITCHEN, UserRole.ADMINISTRATOR]))):
     """Get orders with food items for kitchen"""

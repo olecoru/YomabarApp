@@ -1387,6 +1387,7 @@ const AdminInterface = () => {
                   {!orderFilters.includeServed && " (исключая отданные)"}
                 </div>
               </div>
+            </div>
             
             {orders.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-lg shadow-lg">

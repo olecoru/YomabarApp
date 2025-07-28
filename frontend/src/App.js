@@ -535,6 +535,7 @@ const WaitressInterface = () => {
       setCompletionPhrase(getRandomPhrase(COMPLETION_PHRASES));
       setClients([]);
       setActiveClient(null);
+      setCurrentOrder({}); // Очищаем общий заказ
       setTeamName("");
       setActiveStep("success");
       

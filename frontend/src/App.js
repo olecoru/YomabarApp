@@ -290,6 +290,24 @@ const WaitressInterface = () => {
 
   const removeClient = (clientId) => {
     const updatedClients = clients.filter(client => client.id !== clientId);
+    
+    // Если удаляем всех клиентов - сохранить заказы в общий currentOrder
+    if (updatedClients.length === 0 && clients.length === 1) {
+      const remainingClient = clients.find(client => client.id === clientId);
+      if (remainingClient && remainingClient.order.length > 0) {
+        const newCurrentOrder = {};
+        remainingClient.order.forEach(item => {
+          newCurrentOrder[item.id] = {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+          };
+        });
+        setCurrentOrder(newCurrentOrder);
+      }
+    }
+    
     setClients(updatedClients);
     if (activeClient === clientId) {
       setActiveClient(updatedClients.length > 0 ? updatedClients[0].id : null);

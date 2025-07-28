@@ -1762,6 +1762,7 @@ const AdminInterface = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Роль</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата создания</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -1783,6 +1784,15 @@ const AdminInterface = () => {
                         <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
                           Активный
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => deleteUser(user.id, user.full_name)}
+                          disabled={loading}
+                          className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 disabled:bg-gray-400"
+                        >
+                          Удалить
+                        </button>
                       </td>
                     </tr>
                   ))}

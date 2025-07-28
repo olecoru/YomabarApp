@@ -1465,11 +1465,11 @@ const AdminInterface = () => {
 
         {activeTab === "categories" && (
           <div>
-            <h2 className="text-xl font-bold mb-4">✨ Управление Категориями</h2>
+            <h2 className="text-lg sm:text-xl font-bold mb-4">🍽️ Управление Категориями</h2>
             
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-              <h3 className="text-lg font-semibold mb-4">Добавить Новую Категорию</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-6">
+              <h3 className="text-base sm:text-lg font-semibold mb-4">Добавить Новую Категорию</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input
                   type="text"
                   placeholder="Название (например, appetizers)"

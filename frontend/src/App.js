@@ -893,16 +893,13 @@ const WaitressInterface = () => {
                     )}
 
                     <div className="border-t pt-2 font-semibold">
-                      Итого: ${clients.length === 0 ? 
-                        getCurrentOrderTotal().toFixed(2) : 
-                        (activeClient ? calculateClientTotal(activeClient).toFixed(2) : '0.00')
-                      }
+                      Итого: ${activeClient ? calculateClientTotal(activeClient).toFixed(2) : '0.00'}
                     </div>
                     
                     <div className="space-y-2">
                       <button
                         onClick={submitOrder}
-                        disabled={loading || clients.length === 0 || !clients.some(c => c.order.length > 0)}
+                        disabled={loading || !clients.some(c => c.order.length > 0)}
                         className="w-full bg-red-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {loading ? "Отправка..." : "Отправить заказ"}

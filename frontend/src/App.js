@@ -468,7 +468,7 @@ const WaitressInterface = () => {
   const startNewOrder = () => {
     setClients([]);
     setActiveClient(null);
-    setCurrentOrder({}); // Очищаем общий заказ
+    setCurrentOrder({});
     setTeamName("");
     setActiveStep("table");
   };

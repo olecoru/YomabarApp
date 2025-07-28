@@ -165,18 +165,22 @@ const Login = () => {
 // ИСПРАВЛЕННЫЙ Waitress Interface с правильной логикой
 const WaitressInterface = () => {
   const { user } = React.useContext(AuthContext);
-  const [activeStep, setActiveStep] = useState("welcome");
+  const [activeStep, setActiveStep] = useState("greeting");
   const [selectedTable, setSelectedTable] = useState(null);
-  const [teamName, setTeamName] = useState(""); // ИСПРАВЛЕНО: поле команды
-  const [clients, setClients] = useState([]);
-  const [activeClient, setActiveClient] = useState(null);
+  const [teamName, setTeamName] = useState("");
   const [menu, setMenu] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [activeClient, setActiveClient] = useState(null);
   const [loading, setLoading] = useState(false);
   const [welcomePhrase, setWelcomePhrase] = useState("");
   const [completionPhrase, setCompletionPhrase] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [currentOrder, setCurrentOrder] = useState({}); // Для заказа без клиентов
+
+  // Новые состояния для "Мои заказы"
+  const [activeTab, setActiveTab] = useState("new_order"); // "new_order" или "my_orders"
+  const [myOrders, setMyOrders] = useState([]);
 
   useEffect(() => {
     setWelcomePhrase(getRandomPhrase(WELCOME_PHRASES));

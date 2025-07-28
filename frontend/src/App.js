@@ -1050,6 +1050,11 @@ const AdminInterface = () => {
     name: "", description: "", price: "", category_id: "", item_type: "food"
   });
 
+  // Новый пользователь
+  const [newUser, setNewUser] = useState({
+    username: "", password: "", full_name: "", role: "waitress"
+  });
+
   useEffect(() => {
     fetchOrders();
     fetchCategories();

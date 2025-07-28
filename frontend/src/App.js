@@ -176,6 +176,7 @@ const WaitressInterface = () => {
   const [welcomePhrase, setWelcomePhrase] = useState("");
   const [completionPhrase, setCompletionPhrase] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [currentOrder, setCurrentOrder] = useState({}); // Для заказа без клиентов
 
   useEffect(() => {
     setWelcomePhrase(getRandomPhrase(WELCOME_PHRASES));

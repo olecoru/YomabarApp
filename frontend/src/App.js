@@ -31,6 +31,35 @@ const getRandomPhrase = (phrases) => {
 // Auth Context
 const AuthContext = React.createContext();
 
+// Push notification utilities
+const registerPushNotifications = async (user) => {
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      const permission = await Notification.requestPermission();
+      
+      if (permission === 'granted') {
+        console.log('Push notifications enabled for:', user.role);
+        return registration;
+      }
+    } catch (error) {
+      console.error('Push notification setup failed:', error);
+    }
+  }
+  return null;
+};
+
+const sendLocalNotification = (title, body, role) => {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, {
+      body: body,
+      icon: '/icon-192.png',
+      tag: `yomabar-${role}`,
+      vibrate: [200, 100, 200]
+    });
+  }
+};
+
 // Auth Provider
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);

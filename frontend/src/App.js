@@ -1165,6 +1165,25 @@ const AdminInterface = () => {
     }
   };
 
+  const addUser = async () => {
+    if (!newUser.username || !newUser.password || !newUser.full_name || !newUser.role) {
+      alert("Пожалуйста, заполните все обязательные поля");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.post(`${API}/users`, newUser);
+      setNewUser({ username: "", password: "", full_name: "", role: "waitress" });
+      fetchUsers();
+      alert("Пользователь успешно добавлен!");
+    } catch (error) {
+      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось добавить пользователя"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       await axios.put(`${API}/orders/${orderId}`, { status: newStatus });

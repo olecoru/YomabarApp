@@ -271,6 +271,19 @@ const WaitressInterface = () => {
       name: `Клиент ${clients.length + 1}`,
       order: []
     };
+    
+    // Если это первый клиент и есть общий заказ - перенести его к клиенту
+    if (clients.length === 0 && Object.keys(currentOrder).length > 0) {
+      newClient.order = Object.values(currentOrder).map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity
+      }));
+      // Очистить общий заказ
+      setCurrentOrder({});
+    }
+    
     setClients([...clients, newClient]);
     setActiveClient(newClient.id);
   };

@@ -596,7 +596,7 @@ const WaitressInterface = () => {
               Новый заказ
             </button>
             <button
-              onClick={() => setActiveStep("welcome")}
+              onClick={() => setActiveStep("greeting")}
               className="w-full bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors"
             >
               Вернуться к приветствию

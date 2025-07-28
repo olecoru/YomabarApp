@@ -391,6 +391,9 @@ frontend:
       - working: false
         agent: "main"
         comment: "IMPLEMENTING: User requests simplified workflow - automatically create 'Client 1' when table is selected, remove general table order functionality, ensure all items go directly to Client 1 for submission."
+      - working: "NA"
+        agent: "testing"
+        comment: "✅ BACKEND SUPPORTS SIMPLIFIED ORDER CREATION: Backend testing confirms that POST /api/orders works perfectly with SimpleOrderCreate format (customer_name, table_number, items, total). The backend expects 'Client 1' as customer_name and processes orders correctly. Frontend should use this format instead of complex multi-client structure. Backend is ready to support the simplified 'Client 1' workflow."
         
   - task: "Order Status Management"
     implemented: true

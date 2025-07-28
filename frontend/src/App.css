@@ -148,10 +148,12 @@
   }
   
   .form-grid-mobile input,
-  .form-grid-mobile select {
+  .form-grid-mobile select,
+  .form-grid-mobile textarea {
     width: 100%;
     min-height: 44px;
     font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem 0.5rem;
   }
   
   /* Filter section mobile */
@@ -179,16 +181,17 @@
   }
   
   .filter-buttons-mobile button {
-    padding: 0.5rem;
-    font-size: 0.75rem;
+    padding: 0.75rem;
+    font-size: 0.875rem;
     min-height: 44px;
+    font-weight: 600;
   }
   
   /* Table buttons optimized for touch */
   .table-button {
-    min-height: 4rem;
+    min-height: 44px;
     font-size: 0.875rem;
-    padding: 0.5rem;
+    padding: 0.75rem 1rem;
     font-weight: 600;
   }
   
@@ -209,9 +212,30 @@
     z-index: 40;
     background: white;
     border-top: 2px solid var(--yoma-red);
-    max-height: 40vh;
+    max-height: 50vh;
     overflow-y: auto;
     border-radius: 1rem 1rem 0 0;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Waitress client summary mobile optimization */
+  .client-summary-mobile {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .client-summary-mobile .client-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .client-summary-mobile .client-items {
+    font-size: 0.75rem;
+    color: #6b7280;
   }
   
   /* YomaBar logo responsive */
@@ -247,6 +271,19 @@
   .mobile-header p {
     font-size: 0.75rem;
     color: #6b7280;
+  }
+  
+  /* Touch-friendly buttons */
+  button, .btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Improved text readability */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
   }
 }
 

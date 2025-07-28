@@ -364,11 +364,11 @@ frontend:
         
   - task: "Order Creation System"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -376,6 +376,21 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ ORDER CREATION SYSTEM FULLY WORKING: Complete multi-client order system working perfectly. Table selection (28 tables), team name input (optional for quiz), multiple client management, menu item addition, quantity management, order summary with totals, and order submission all functional. Russian localization throughout interface."
+      - working: false
+        agent: "user"
+        comment: "❌ USER REPORTED BUG: Orders assigned to general table account (without specific clients) cannot be submitted. Adding a client after items are in general table causes items to be erased. User requests simplification: automatically create 'Client 1' when table is opened and all items go to this client."
+
+  - task: "Automatic Client 1 Creation System"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "IMPLEMENTING: User requests simplified workflow - automatically create 'Client 1' when table is selected, remove general table order functionality, ensure all items go directly to Client 1 for submission."
         
   - task: "Order Status Management"
     implemented: true

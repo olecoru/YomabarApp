@@ -1141,6 +1141,15 @@ const BarInterface = () => {
     try {
       await axios.put(`${API}/orders/${orderId}`, { status: newStatus });
       fetchBarOrders();
+      
+      // Send notification when drink order is ready
+      if (newStatus === 'ready') {
+        sendLocalNotification(
+          '🍻 YomaBar - Напитки готовы!',
+          `Заказ #${orderId.slice(-8)} готов к выдаче`,
+          'waitress'
+        );
+      }
     } catch (error) {
       alert("Ошибка при обновлении статуса заказа");
     } finally {

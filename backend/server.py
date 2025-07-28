@@ -823,11 +823,11 @@ async def update_order_status(order_id: str, status_update: dict, current_user: 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update order: {str(e)}")
 
-@api_router.get("/orders/table/{table_number}", response_model=List[Order])
+@api_router.get("/orders/table/{table_number}")
 async def get_orders_by_table(table_number: int, current_user: User = Depends(get_current_user)):
     """Get orders for a specific table"""
-    orders = await db.orders.find({"table_number": table_number}).sort("created_at", -1).to_list(1000)
-    return [Order(**order) for order in orders]
+    orders = await db.orders.find({"table_number": table_number}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return orders
 
 # Menu item management endpoints
 @api_router.post("/menu", response_model=MenuItem)

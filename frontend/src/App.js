@@ -719,6 +719,15 @@ const WaitressInterface = () => {
                   key={tableNumber}
                   onClick={() => {
                     setSelectedTable(tableNumber);
+                    // Автоматически создаём "Клиент 1" при выборе стола
+                    const firstClient = {
+                      id: Date.now(),
+                      name: "Клиент 1",
+                      order: []
+                    };
+                    setClients([firstClient]);
+                    setActiveClient(firstClient.id);
+                    setCurrentOrder({}); // Очищаем общий заказ
                     setActiveStep("order");
                   }}
                   className="aspect-square bg-red-600 text-white font-bold text-lg rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"

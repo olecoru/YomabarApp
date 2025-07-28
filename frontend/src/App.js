@@ -794,67 +794,43 @@ const WaitressInterface = () => {
                     />
                   </div>
 
-                  {/* ИСПРАВЛЕНО: управление клиентами */}
+                  {/* Упрощённое управление клиентами */}
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-gray-700">
                         Клиенты за столом
                       </label>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={addClient}
-                          className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors"
-                        >
-                          + Добавить клиента
-                        </button>
-                        {clients.length > 0 && (
-                          <button
-                            onClick={() => {
-                              // Перенести все заказы клиентов в общий заказ
-                              const allClientOrders = {};
-                              clients.forEach(client => {
-                                client.order.forEach(item => {
-                                  if (allClientOrders[item.id]) {
-                                    allClientOrders[item.id].quantity += item.quantity;
-                                  } else {
-                                    allClientOrders[item.id] = { ...item };
-                                  }
-                                });
-                              });
-                              setCurrentOrder(allClientOrders);
-                              setClients([]);
-                              setActiveClient(null);
-                            }}
-                            className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600 transition-colors"
-                          >
-                            📋 Общий заказ
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={addClient}
+                        className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-colors"
+                      >
+                        + Добавить клиента
+                      </button>
                     </div>
                     
-                    {clients.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {clients.map(client => (
-                          <div
-                            key={client.id}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-colors ${
-                              activeClient === client.id
-                                ? 'border-red-500 bg-red-50'
-                                : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                            }`}
-                            onClick={() => setActiveClient(client.id)}
-                          >
-                            <input
-                              type="text"
-                              value={client.name}
-                              onChange={(e) => updateClientName(client.id, e.target.value)}
-                              className="bg-transparent border-none outline-none text-sm font-medium min-w-0"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <span className="text-xs text-gray-500">
-                              ({client.order.length})
-                            </span>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {clients.map((client, index) => (
+                        <div
+                          key={client.id}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-colors ${
+                            activeClient === client.id
+                              ? 'border-red-500 bg-red-50'
+                              : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                          }`}
+                          onClick={() => setActiveClient(client.id)}
+                        >
+                          <input
+                            type="text"
+                            value={client.name}
+                            onChange={(e) => updateClientName(client.id, e.target.value)}
+                            className="bg-transparent border-none outline-none text-sm font-medium min-w-0"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <span className="text-xs text-gray-500">
+                            ({client.order.length})
+                          </span>
+                          {/* Разрешаем удалять только если это не единственный клиент */}
+                          {clients.length > 1 && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -864,10 +840,10 @@ const WaitressInterface = () => {
                             >
                               ×
                             </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="mb-4">

@@ -91,7 +91,12 @@ const AuthProvider = ({ children }) => {
       localStorage.setItem("token", access_token);
       axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
       
-      setUser({ id: user_id, username, role, full_name });
+      const userData = { id: user_id, username, role, full_name };
+      setUser(userData);
+      
+      // Register push notifications after successful login
+      registerPushNotifications(userData);
+      
       return { success: true };
     } catch (error) {
       return { success: false, error: error.response?.data?.detail || "Ошибка входа" };

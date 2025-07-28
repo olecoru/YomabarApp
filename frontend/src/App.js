@@ -1415,12 +1415,12 @@ const AdminInterface = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {orders.map((order) => (
                         <tr key={order.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">Стол {order.table_number}</div>
-                            <div className="text-sm text-gray-500">{new Date(order.created_at).toLocaleString('ru-RU')}</div>
+                          <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
+                            <div className="text-xs sm:text-sm font-medium text-gray-900">Стол {order.table_number}</div>
+                            <div className="text-xs text-gray-500">{new Date(order.created_at).toLocaleString('ru-RU')}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{order.customer_name}</div>
+                          <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
+                            <div className="text-xs sm:text-sm text-gray-900">{order.customer_name}</div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm text-gray-900">

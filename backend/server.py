@@ -224,6 +224,11 @@ class Order(BaseModel):
     clients: List[ClientOrder]
     total_amount: float
     status: OrderStatus = OrderStatus.PENDING
+    # Separate status tracking for mixed orders
+    kitchen_status: OrderStatus = OrderStatus.PENDING  # For food items
+    bar_status: OrderStatus = OrderStatus.PENDING      # For drink items  
+    has_food_items: bool = False
+    has_drink_items: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     special_notes: Optional[str] = None

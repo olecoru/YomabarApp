@@ -1198,6 +1198,40 @@ const AdminInterface = () => {
     }
   };
 
+  const deleteCategory = async (categoryId, categoryName) => {
+    if (!confirm(`Вы уверены, что хотите удалить категорию "${categoryName}"?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.delete(`${API}/categories/${categoryId}`);
+      fetchCategories();
+      alert("Категория успешно удалена!");
+    } catch (error) {
+      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось удалить категорию"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteMenuItem = async (itemId, itemName) => {
+    if (!confirm(`Вы уверены, что хотите удалить блюдо "${itemName}"?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.delete(`${API}/menu/${itemId}`);
+      fetchMenu();
+      alert("Блюдо успешно удалено!");
+    } catch (error) {
+      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось удалить блюдо"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       await axios.put(`${API}/orders/${orderId}`, { status: newStatus });

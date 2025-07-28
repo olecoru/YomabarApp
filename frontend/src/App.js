@@ -1149,6 +1149,10 @@ const AdminInterface = () => {
     fetchCategories();
     fetchMenu();
     fetchUsers();
+    
+    // Автообновление заказов каждые 30 секунд
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchOrders = async (customFilters = null) => {

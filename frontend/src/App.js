@@ -1035,7 +1035,7 @@ const BarInterface = () => {
   );
 };
 
-// Admin Interface - полный функционал
+// Admin Interface - полный функционал с мобильной адаптацией
 const AdminInterface = () => {
   const { user } = React.useContext(AuthContext);
   const [activeTab, setActiveTab] = useState("orders");

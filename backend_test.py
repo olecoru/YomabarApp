@@ -1576,6 +1576,302 @@ class EnhancedRestaurantTester:
         
         self.log_test("Complete New Features Workflow Test", True, "All new feature workflow steps completed successfully:\n" + "\n".join(workflow_steps))
         
+    def test_admin_order_filtering_features(self):
+        """Test NEW Admin Order Filtering Features - PRIORITY TASK"""
+        print("\n=== TESTING NEW ADMIN ORDER FILTERING FEATURES (PRIORITY) ===")
+        
+        # First create some test orders with different statuses and timestamps
+        if "waitress" in self.tokens and self.menu_items:
+            self.create_test_orders_for_filtering()
+        
+        # Test 1: Authentication as admin (admin1/password123)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/auth/me")
+                
+                if response.status_code == 200:
+                    user_data = response.json()
+                    if user_data["role"] == "administrator" and user_data["username"] == "admin1":
+                        self.log_test("Admin Authentication (admin1/password123)", True, 
+                                    f"Successfully authenticated as admin: {user_data['full_name']}")
+                    else:
+                        self.log_test("Admin Authentication (admin1/password123)", False, 
+                                    f"Wrong user authenticated: {user_data.get('username', 'unknown')}")
+                else:
+                    self.log_test("Admin Authentication (admin1/password123)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Admin Authentication (admin1/password123)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: GET /api/orders/admin with default parameters (24 hours, exclude served)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/orders/admin")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "orders" in data and "filters" in data:
+                        filters = data["filters"]
+                        if (filters.get("hours_back") == 24 and 
+                            filters.get("include_served") == False and
+                            "total_count" in filters):
+                            self.log_test("GET /api/orders/admin (default params)", True, 
+                                        f"Default filtering working: {filters['total_count']} orders, 24h back, exclude served")
+                        else:
+                            self.log_test("GET /api/orders/admin (default params)", False, 
+                                        f"Default parameters incorrect: {filters}")
+                    else:
+                        self.log_test("GET /api/orders/admin (default params)", False, 
+                                    "Response missing 'orders' or 'filters' fields")
+                else:
+                    self.log_test("GET /api/orders/admin (default params)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/orders/admin (default params)", False, f"Request failed: {str(e)}")
+        
+        # Test 3: Test hours_back parameter (6, 12, 24, 48 hours)
+        if "administrator" in self.tokens:
+            for hours in [6, 12, 24, 48]:
+                try:
+                    self.set_auth_header("administrator")
+                    response = self.session.get(f"{BACKEND_URL}/orders/admin?hours_back={hours}")
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data["filters"]["hours_back"] == hours:
+                            self.log_test(f"GET /api/orders/admin (hours_back={hours})", True, 
+                                        f"Hours filtering working: {data['filters']['total_count']} orders in last {hours}h")
+                        else:
+                            self.log_test(f"GET /api/orders/admin (hours_back={hours})", False, 
+                                        f"Hours parameter not applied correctly: {data['filters']['hours_back']}")
+                    else:
+                        self.log_test(f"GET /api/orders/admin (hours_back={hours})", False, f"HTTP {response.status_code}: {response.text}")
+                except Exception as e:
+                    self.log_test(f"GET /api/orders/admin (hours_back={hours})", False, f"Request failed: {str(e)}")
+        
+        # Test 4: Test date range filtering (from_date and to_date)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                from datetime import datetime, timedelta
+                
+                # Test with today's date range
+                today = datetime.now().strftime("%Y-%m-%d")
+                yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+                
+                response = self.session.get(f"{BACKEND_URL}/orders/admin?from_date={yesterday}&to_date={today}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    filters = data["filters"]
+                    if (filters.get("from_date") == yesterday and 
+                        filters.get("to_date") == today):
+                        self.log_test("GET /api/orders/admin (date range)", True, 
+                                    f"Date range filtering working: {filters['total_count']} orders from {yesterday} to {today}")
+                    else:
+                        self.log_test("GET /api/orders/admin (date range)", False, 
+                                    f"Date range parameters not applied: {filters}")
+                else:
+                    self.log_test("GET /api/orders/admin (date range)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/orders/admin (date range)", False, f"Request failed: {str(e)}")
+        
+        # Test 5: Test include_served parameter (true/false)
+        if "administrator" in self.tokens:
+            for include_served in [True, False]:
+                try:
+                    self.set_auth_header("administrator")
+                    response = self.session.get(f"{BACKEND_URL}/orders/admin?include_served={str(include_served).lower()}")
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data["filters"]["include_served"] == include_served:
+                            served_text = "including" if include_served else "excluding"
+                            self.log_test(f"GET /api/orders/admin (include_served={include_served})", True, 
+                                        f"Served filter working: {data['filters']['total_count']} orders {served_text} served")
+                        else:
+                            self.log_test(f"GET /api/orders/admin (include_served={include_served})", False, 
+                                        f"include_served parameter not applied: {data['filters']['include_served']}")
+                    else:
+                        self.log_test(f"GET /api/orders/admin (include_served={include_served})", False, f"HTTP {response.status_code}: {response.text}")
+                except Exception as e:
+                    self.log_test(f"GET /api/orders/admin (include_served={include_served})", False, f"Request failed: {str(e)}")
+        
+        # Test 6: Verify response format includes both "orders" array and "filters" metadata
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/orders/admin")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Check response structure
+                    has_orders = "orders" in data and isinstance(data["orders"], list)
+                    has_filters = "filters" in data and isinstance(data["filters"], dict)
+                    
+                    if has_orders and has_filters:
+                        filters = data["filters"]
+                        required_filter_fields = ["hours_back", "from_date", "to_date", "include_served", "total_count"]
+                        has_all_filter_fields = all(field in filters for field in required_filter_fields)
+                        
+                        if has_all_filter_fields:
+                            self.log_test("Response format verification", True, 
+                                        f"Response has correct structure: orders array ({len(data['orders'])} items) and filters metadata")
+                        else:
+                            missing_fields = [field for field in required_filter_fields if field not in filters]
+                            self.log_test("Response format verification", False, 
+                                        f"Missing filter fields: {missing_fields}")
+                    else:
+                        self.log_test("Response format verification", False, 
+                                    f"Missing required fields: orders={has_orders}, filters={has_filters}")
+                else:
+                    self.log_test("Response format verification", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Response format verification", False, f"Request failed: {str(e)}")
+        
+        # Test 7: Test invalid date format handling (should return 400 error)
+        if "administrator" in self.tokens:
+            invalid_dates = ["2024-13-01", "invalid-date", "2024/01/01", "01-01-2024"]
+            
+            for invalid_date in invalid_dates:
+                try:
+                    self.set_auth_header("administrator")
+                    response = self.session.get(f"{BACKEND_URL}/orders/admin?from_date={invalid_date}&to_date=2024-01-02")
+                    
+                    if response.status_code == 400:
+                        self.log_test(f"Invalid date format handling ({invalid_date})", True, 
+                                    "Correctly returned 400 error for invalid date format")
+                    else:
+                        self.log_test(f"Invalid date format handling ({invalid_date})", False, 
+                                    f"Expected 400 error, got HTTP {response.status_code}")
+                except Exception as e:
+                    self.log_test(f"Invalid date format handling ({invalid_date})", False, f"Request failed: {str(e)}")
+        
+        # Test 8: Confirm only administrators can access this endpoint (403 for other roles)
+        non_admin_roles = ["waitress", "kitchen", "bartender"]
+        
+        for role in non_admin_roles:
+            if role in self.tokens:
+                try:
+                    self.set_auth_header(role)
+                    response = self.session.get(f"{BACKEND_URL}/orders/admin")
+                    
+                    if response.status_code == 403:
+                        self.log_test(f"Access control ({role} - should fail)", True, 
+                                    f"Correctly denied access for {role} role")
+                    else:
+                        self.log_test(f"Access control ({role} - should fail)", False, 
+                                    f"Expected 403 for {role}, got HTTP {response.status_code}")
+                except Exception as e:
+                    self.log_test(f"Access control ({role} - should fail)", False, f"Request failed: {str(e)}")
+        
+        # Test 9: Test combination of parameters (date range takes precedence over hours_back)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                from datetime import datetime, timedelta
+                
+                today = datetime.now().strftime("%Y-%m-%d")
+                yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+                
+                # Use both date range and hours_back - date range should take precedence
+                response = self.session.get(f"{BACKEND_URL}/orders/admin?hours_back=6&from_date={yesterday}&to_date={today}&include_served=true")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    filters = data["filters"]
+                    
+                    # Date range should take precedence, so from_date and to_date should be set
+                    if (filters.get("from_date") == yesterday and 
+                        filters.get("to_date") == today and
+                        filters.get("include_served") == True):
+                        self.log_test("Parameter combination (date range precedence)", True, 
+                                    f"Date range takes precedence over hours_back: {filters['total_count']} orders")
+                    else:
+                        self.log_test("Parameter combination (date range precedence)", False, 
+                                    f"Parameter precedence not working correctly: {filters}")
+                else:
+                    self.log_test("Parameter combination (date range precedence)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Parameter combination (date range precedence)", False, f"Request failed: {str(e)}")
+    
+    def create_test_orders_for_filtering(self):
+        """Create test orders with different statuses for filtering tests"""
+        try:
+            self.set_auth_header("waitress")
+            
+            if not self.menu_items:
+                return
+            
+            # Get some menu items for testing
+            food_items = [item for item in self.menu_items if item["item_type"] == "food"][:2]
+            drink_items = [item for item in self.menu_items if item["item_type"] == "drink"][:2]
+            
+            if not food_items or not drink_items:
+                return
+            
+            # Create orders with different statuses
+            test_orders = [
+                {
+                    "customer_name": "Test Customer 1",
+                    "table_number": 25,
+                    "items": [
+                        {
+                            "menu_item_id": food_items[0]["id"],
+                            "quantity": 1,
+                            "price": food_items[0]["price"]
+                        }
+                    ],
+                    "total": food_items[0]["price"],
+                    "status": "pending",
+                    "notes": "Test order for filtering - pending"
+                },
+                {
+                    "customer_name": "Test Customer 2", 
+                    "table_number": 26,
+                    "items": [
+                        {
+                            "menu_item_id": drink_items[0]["id"],
+                            "quantity": 2,
+                            "price": drink_items[0]["price"]
+                        }
+                    ],
+                    "total": drink_items[0]["price"] * 2,
+                    "status": "preparing",
+                    "notes": "Test order for filtering - preparing"
+                },
+                {
+                    "customer_name": "Test Customer 3",
+                    "table_number": 27,
+                    "items": [
+                        {
+                            "menu_item_id": food_items[1]["id"] if len(food_items) > 1 else food_items[0]["id"],
+                            "quantity": 1,
+                            "price": food_items[1]["price"] if len(food_items) > 1 else food_items[0]["price"]
+                        }
+                    ],
+                    "total": food_items[1]["price"] if len(food_items) > 1 else food_items[0]["price"],
+                    "status": "served",
+                    "notes": "Test order for filtering - served"
+                }
+            ]
+            
+            # Create the test orders
+            for order_data in test_orders:
+                response = self.session.post(f"{BACKEND_URL}/orders", json=order_data)
+                if response.status_code == 200:
+                    order_id = response.json().get("order_id")
+                    # Update status if needed (orders are created as pending by default)
+                    if order_data["status"] != "pending" and order_id:
+                        status_update = {"status": order_data["status"]}
+                        self.session.put(f"{BACKEND_URL}/orders/{order_id}", json=status_update)
+            
+            self.log_test("Test orders creation for filtering", True, "Created test orders with different statuses")
+            
+        except Exception as e:
+            self.log_test("Test orders creation for filtering", False, f"Failed to create test orders: {str(e)}")
+
     def run_all_tests(self):
         """Run all enhanced restaurant management system tests"""
         print(f"🚀 Starting YomaBar Restaurant Management System Backend Tests")

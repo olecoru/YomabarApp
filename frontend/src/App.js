@@ -1301,7 +1301,7 @@ const AdminInterface = () => {
             <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4">
               <h3 className="text-base sm:text-lg font-semibold mb-3">🔍 Фильтры заказов</h3>
               
-              <div className="filters-mobile">
+              <div className="space-y-3">
                 {/* Основные фильтры */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -1358,7 +1358,7 @@ const AdminInterface = () => {
                 </div>
 
                 {/* Быстрые кнопки */}
-                <div className="filter-buttons-mobile">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => updateOrderFilters({
                       hoursBack: 24,

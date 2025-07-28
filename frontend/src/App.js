@@ -1222,6 +1222,23 @@ const AdminInterface = () => {
     }
   };
 
+  const deleteUser = async (userId, userName) => {
+    if (!confirm(`Вы уверены, что хотите удалить пользователя "${userName}"?`)) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      await axios.delete(`${API}/users/${userId}`);
+      fetchUsers();
+      alert("Пользователь успешно удален!");
+    } catch (error) {
+      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось удалить пользователя"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
       await axios.put(`${API}/orders/${orderId}`, { status: newStatus });

@@ -305,9 +305,37 @@ const WaitressInterface = () => {
     return clients.reduce((total, client) => total + calculateClientTotal(client.id), 0);
   };
 
-  const getTotalItemsCount = () => {
-    return clients.reduce((total, client) => 
-      total + client.order.reduce((clientTotal, item) => clientTotal + item.quantity, 0), 0
+  const addToCurrentOrder = (item) => {
+    setCurrentOrder(prev => ({
+      ...prev,
+      [item.id]: {
+        ...item,
+        quantity: (prev[item.id]?.quantity || 0) + 1
+      }
+    }));
+  };
+
+  const removeFromCurrentOrder = (itemId) => {
+    setCurrentOrder(prev => {
+      const updated = { ...prev };
+      if (updated[itemId] && updated[itemId].quantity > 1) {
+        updated[itemId] = { ...updated[itemId], quantity: updated[itemId].quantity - 1 };
+      } else {
+        delete updated[itemId];
+      }
+      return updated;
+    });
+  };
+
+  const getCurrentOrderTotal = () => {
+    return Object.values(currentOrder).reduce((total, item) => 
+      total + (item.price * item.quantity), 0
+    );
+  };
+
+  const getCurrentOrderCount = () => {
+    return Object.values(currentOrder).reduce((total, item) => 
+      total + item.quantity, 0
     );
   };
 

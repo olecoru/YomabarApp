@@ -793,7 +793,7 @@ async def get_kitchen_orders(current_user: User = Depends(require_role([UserRole
 @api_router.get("/orders/bar")
 async def get_bar_orders(current_user: User = Depends(require_role([UserRole.BARTENDER, UserRole.ADMINISTRATOR]))):
     """Get orders with drink items for bar"""
-    orders = await db.orders.find({"status": {"$in": ["pending", "confirmed", "preparing"]}}).sort("created_at", 1).to_list(1000)
+    orders = await db.orders.find({"status": {"$in": ["pending", "confirmed", "preparing"]}}, {"_id": 0}).sort("created_at", 1).to_list(1000)
     
     bar_orders = []
     for order in orders:

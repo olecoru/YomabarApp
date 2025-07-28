@@ -157,16 +157,6 @@ const Login = () => {
             </button>
           </div>
         </form>
-        
-        <div className="mt-6 text-center">
-          <h3 className="text-lg font-medium text-gray-900">Демо Аккаунты</h3>
-          <div className="mt-2 space-y-1 text-sm text-gray-600">
-            <p>Официант: <code className="bg-gray-100 px-2 py-1 rounded">waitress1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
-            <p>Кухня: <code className="bg-gray-100 px-2 py-1 rounded">kitchen1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
-            <p>Бармен: <code className="bg-gray-100 px-2 py-1 rounded">bartender1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
-            <p>Администратор: <code className="bg-gray-100 px-2 py-1 rounded">admin1</code> / <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
-          </div>
-        </div>
       </div>
     </div>
   );

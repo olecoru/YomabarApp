@@ -767,10 +767,10 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     """Get orders based on user role"""
     if current_user.role == UserRole.WAITRESS:
         # Waitress sees only their own orders
-        orders = await db.orders.find({"waitress_id": current_user.id}).sort("created_at", -1).to_list(1000)
+        orders = await db.orders.find({"waitress_id": current_user.id}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     else:
         # Kitchen, bartender, and administrator see all orders
-        orders = await db.orders.find().sort("created_at", -1).to_list(1000)
+        orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
     return orders
 

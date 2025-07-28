@@ -1733,6 +1733,7 @@ const AdminInterface = () => {
             </div>
           </div>
         )}
+        </>
       </div>
     </div>
   );

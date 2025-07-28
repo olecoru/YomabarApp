@@ -751,17 +751,6 @@ const WaitressInterface = () => {
 
   // ИСПРАВЛЕННЫЙ интерфейс создания заказа
   if (activeStep === "order") {
-    // Автоматически создаём первого клиента если его нет
-    if (clients.length === 0) {
-      const firstClient = {
-        id: Date.now(),
-        name: "Клиент 1",
-        order: []
-      };
-      setClients([firstClient]);
-      setActiveClient(firstClient.id);
-    }
-
     const currentClient = getCurrentClient();
     
     return (

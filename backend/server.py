@@ -751,15 +751,30 @@ async def create_order(order_data: SimpleOrderCreate, current_user: User = Depen
             "updated_at": datetime.utcnow()
         }
         
-        # Add menu item names to items
+        # Determine if order has food and/or drink items
+        has_food_items = False
+        has_drink_items = False
+        
+        # Add menu item names to items and check types
         for item in order["items"]:
             menu_item = await db.menu_items.find_one({"id": item["menu_item_id"]})
             if menu_item:
                 item["menu_item_name"] = menu_item["name"]
                 item["item_type"] = menu_item["item_type"]
+                if menu_item["item_type"] == "food":
+                    has_food_items = True
+                elif menu_item["item_type"] == "drink":
+                    has_drink_items = True
             else:
                 item["menu_item_name"] = "Unknown Item"
                 item["item_type"] = "food"
+                has_food_items = True
+        
+        # Set appropriate statuses based on order contents
+        order["has_food_items"] = has_food_items
+        order["has_drink_items"] = has_drink_items
+        order["kitchen_status"] = "pending" if has_food_items else "ready"
+        order["bar_status"] = "pending" if has_drink_items else "ready"
         
         await db.orders.insert_one(order)
         return {"success": True, "order_id": order["id"]}

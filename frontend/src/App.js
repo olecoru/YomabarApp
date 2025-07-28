@@ -905,42 +905,10 @@ const WaitressInterface = () => {
                 <div className="lg:col-span-1">
                   <div className="bg-gray-50 p-4 rounded-lg sticky top-4">
                     <h3 className="font-semibold text-gray-900 mb-4">
-                      {clients.length === 0 ? "📋 Общий заказ на стол" : 
-                       currentClient ? `Заказ - ${currentClient.name}` : "Заказ"}
+                      {currentClient ? `Заказ - ${currentClient.name}` : "Выберите клиента"}
                     </h3>
                     
-                    {clients.length === 0 ? (
-                      // Показываем общий заказ на стол
-                      Object.keys(currentOrder).length === 0 ? (
-                        <p className="text-gray-500 text-sm">Заказ пуст - нажмите "Добавить" рядом с блюдом</p>
-                      ) : (
-                        <div className="space-y-3 mb-4">
-                          {Object.values(currentOrder).map(item => (
-                            <div key={item.id} className="flex justify-between items-center">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium">{item.name}</p>
-                                <p className="text-xs text-gray-500">${item.price.toFixed(2)}</p>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => removeFromCurrentOrder(item.id)}
-                                  className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-700"
-                                >
-                                  -
-                                </button>
-                                <span className="w-8 text-center text-sm">{item.quantity}</span>
-                                <button
-                                  onClick={() => addToCurrentOrder(item)}
-                                  className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-700"
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                    ) : !activeClient ? (
+                    {!activeClient ? (
                       <p className="text-gray-500 text-sm">Выберите клиента для добавления блюд</p>
                     ) : currentClient?.order.length === 0 ? (
                       <p className="text-gray-500 text-sm">Заказ пуст</p>

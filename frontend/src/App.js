@@ -462,30 +462,109 @@ const WaitressInterface = () => {
   };
 
   // Приветственный экран
-  if (activeStep === "welcome") {
+  if (activeStep === "greeting") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-red-600 mb-2">YomaBar</h1>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Официант: {user.full_name}
-            </h2>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
+        {/* Навигация вкладок */}
+        <div className="bg-white shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex space-x-4 py-3">
+              <button
+                onClick={() => setActiveTab("new_order")}
+                className={`px-4 py-2 rounded-md font-medium ${activeTab === "new_order" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+              >
+                Новый заказ
+              </button>
+              <button
+                onClick={() => setActiveTab("my_orders")}
+                className={`px-4 py-2 rounded-md font-medium ${activeTab === "my_orders" ? "bg-red-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+              >
+                Мои заказы
+              </button>
+            </div>
           </div>
-          
-          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800 font-medium text-lg">
-              {welcomePhrase}
-            </p>
-          </div>
-          
-          <button
-            onClick={() => setActiveStep("table")}
-            className="w-full bg-red-600 text-white font-medium py-3 px-6 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Начать работу
-          </button>
         </div>
+
+        {activeTab === "new_order" ? (
+          <div className="flex items-center justify-center pt-20">
+            <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg text-center">
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-red-600 mb-2">YomaBar</h1>
+                <p className="text-gray-600">Система управления заказами</p>
+              </div>
+              
+              <div className="mb-8">
+                <div className="text-4xl mb-4">👋</div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                  {welcomePhrase}
+                </h2>
+                <p className="text-gray-600">Официант: {user.full_name}</p>
+              </div>
+              
+              <button
+                onClick={() => setActiveStep("table")}
+                className="w-full bg-red-600 text-white py-3 rounded-md font-medium hover:bg-red-700 transition-colors"
+              >
+                Начать работу
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">📋 Мои заказы</h2>
+            
+            {myOrders.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg shadow-lg">
+                <div className="text-6xl mb-4">📋</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Нет заказов</h3>
+                <p className="text-gray-600">Ваши заказы будут отображаться здесь</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="grid gap-4 p-6">
+                  {myOrders.map((order) => (
+                    <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-semibold">Стол {order.table_number}</h3>
+                          <p className="text-sm text-gray-600">
+                            {new Date(order.created_at).toLocaleString('ru-RU')}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                            order.status === 'preparing' ? 'bg-orange-100 text-orange-800' :
+                            order.status === 'ready' ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.status === 'pending' ? 'Ожидание' :
+                             order.status === 'confirmed' ? 'Подтверждён' :
+                             order.status === 'preparing' ? 'Готовится' :
+                             order.status === 'ready' ? 'Готов' : 'Отдан'}
+                          </span>
+                          {order.status === 'ready' && (
+                            <button
+                              onClick={() => markOrderAsServed(order.id)}
+                              className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                            >
+                              Отдать
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p>Позиций: {order.items?.length || 0}</p>
+                        {order.customer_name && <p>Клиент: {order.customer_name}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   }

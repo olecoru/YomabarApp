@@ -872,11 +872,58 @@ async def get_bar_orders(current_user: User = Depends(require_role([UserRole.BAR
 
 @api_router.put("/orders/{order_id}")
 async def update_order_status(order_id: str, status_update: dict, current_user: User = Depends(get_current_user)):
-    """Update order status"""
+    """Update order status with smart mixed order logic"""
     try:
+        order = await db.orders.find_one({"id": order_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        new_status = status_update.get("status")
+        update_fields = {"updated_at": datetime.utcnow()}
+        
+        # Determine what part of the order to update based on user role
+        if current_user.role == UserRole.KITCHEN:
+            # Kitchen updates food status
+            update_fields["kitchen_status"] = new_status
+        elif current_user.role == UserRole.BARTENDER:
+            # Bar updates drink status  
+            update_fields["bar_status"] = new_status
+        else:
+            # Admin can update overall status directly
+            update_fields["status"] = new_status
+            
+        # Calculate overall order status for mixed orders
+        if current_user.role in [UserRole.KITCHEN, UserRole.BARTENDER]:
+            current_kitchen_status = order.get("kitchen_status", "pending")
+            current_bar_status = order.get("bar_status", "pending")
+            has_food = order.get("has_food_items", False)
+            has_drinks = order.get("has_drink_items", False)
+            
+            # Update the specific status
+            if current_user.role == UserRole.KITCHEN:
+                current_kitchen_status = new_status
+            else:
+                current_bar_status = new_status
+            
+            # Determine overall status
+            if has_food and has_drinks:
+                # Mixed order - both parts must be ready
+                if current_kitchen_status == "ready" and current_bar_status == "ready":
+                    update_fields["status"] = "ready"
+                elif current_kitchen_status == "served" and current_bar_status == "served":
+                    update_fields["status"] = "served"  
+                else:
+                    update_fields["status"] = "preparing"
+            elif has_food:
+                # Food-only order
+                update_fields["status"] = current_kitchen_status
+            elif has_drinks:
+                # Drink-only order
+                update_fields["status"] = current_bar_status
+        
         result = await db.orders.update_one(
             {"id": order_id},
-            {"$set": {"status": status_update.get("status"), "updated_at": datetime.utcnow()}}
+            {"$set": update_fields}
         )
         
         if result.matched_count == 0:

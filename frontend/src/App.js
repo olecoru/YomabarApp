@@ -313,14 +313,12 @@ const WaitressInterface = () => {
 
   // ИСПРАВЛЕНО: убрана проверка обязательного имени клиента
   const submitOrder = async () => {
-    if (clients.length === 0) {
-      alert("Добавьте хотя бы одного клиента");
-      return;
-    }
-
-    const hasItems = clients.some(client => client.order.length > 0);
-    if (!hasItems) {
-      alert("Добавьте блюда в заказ");
+    // Проверяем есть ли заказы
+    const hasOrders = clients.some(client => client.order.length > 0) || 
+                     (clients.length === 0 && Object.keys(currentOrder).length > 0);
+    
+    if (!hasOrders) {
+      alert("Добавьте хотя бы одну позицию в заказ");
       return;
     }
 
@@ -331,22 +329,38 @@ const WaitressInterface = () => {
       if (teamName.trim()) {
         orderNotes += ` | Команда: ${teamName}`;
       }
-      orderNotes += "\n\nРаспределение по клиентам:\n";
-
-      clients.forEach(client => {
-        if (client.order.length > 0) {
-          orderNotes += `${client.name}:\n`;
-          client.order.forEach(item => {
+      
+      // Если есть клиенты - показываем распределение по клиентам
+      if (clients.length > 0) {
+        orderNotes += "\n\nРаспределение по клиентам:\n";
+        clients.forEach(client => {
+          if (client.order.length > 0) {
+            orderNotes += `${client.name}:\n`;
+            client.order.forEach(item => {
+              allItems.push({
+                menu_item_id: item.id,
+                quantity: item.quantity,
+                price: item.price
+              });
+              orderNotes += `  - ${item.name} x${item.quantity} ($${(item.price * item.quantity).toFixed(2)})\n`;
+            });
+            orderNotes += `  Итого: $${calculateClientTotal(client.id).toFixed(2)}\n\n`;
+          }
+        });
+      } else {
+        // Если нет клиентов - общий счёт на стол
+        orderNotes += "\n\nОбщий заказ на стол:\n";
+        Object.values(currentOrder).forEach(item => {
+          if (item.quantity > 0) {
             allItems.push({
               menu_item_id: item.id,
               quantity: item.quantity,
               price: item.price
             });
             orderNotes += `  - ${item.name} x${item.quantity} ($${(item.price * item.quantity).toFixed(2)})\n`;
-          });
-          orderNotes += `  Итого: $${calculateClientTotal(client.id).toFixed(2)}\n\n`;
-        }
-      });
+          }
+        });
+      }
 
       const orderData = {
         customer_name: teamName.trim() || `Стол ${selectedTable}`,

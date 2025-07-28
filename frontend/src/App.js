@@ -1215,6 +1215,26 @@ const AdminInterface = () => {
     }
   };
 
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'administrator': return 'bg-red-100 text-red-800';
+      case 'waitress': return 'bg-blue-100 text-blue-800';
+      case 'kitchen': return 'bg-orange-100 text-orange-800';
+      case 'bartender': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoleText = (role) => {
+    switch (role) {
+      case 'administrator': return 'Администратор';
+      case 'waitress': return 'Официант';
+      case 'kitchen': return 'Кухня';
+      case 'bartender': return 'Бармен';
+      default: return role;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100">
       <header className="bg-white shadow-sm">

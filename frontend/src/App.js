@@ -890,7 +890,6 @@ const WaitressInterface = () => {
                           <span className="text-red-600">${calculateGrandTotal().toFixed(2)}</span>
                         </div>
                       </div>
-                    )}
 
                     <div className="border-t pt-2 font-semibold">
                       Итого: ${activeClient ? calculateClientTotal(activeClient).toFixed(2) : '0.00'}

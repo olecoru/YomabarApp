@@ -302,7 +302,11 @@ const WaitressInterface = () => {
   };
 
   const calculateGrandTotal = () => {
-    return clients.reduce((total, client) => total + calculateClientTotal(client.id), 0);
+    if (clients.length > 0) {
+      return clients.reduce((total, client) => total + calculateClientTotal(client.id), 0);
+    } else {
+      return getCurrentOrderTotal();
+    }
   };
 
   const getTotalItemsCount = () => {

@@ -1325,7 +1325,7 @@ const AdminInterface = () => {
                 </div>
 
                 {/* Даты */}
-                <div className="filter-row-mobile">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Дата от:

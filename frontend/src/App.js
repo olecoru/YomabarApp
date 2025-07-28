@@ -1292,8 +1292,8 @@ const AdminInterface = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
-        
-        {activeTab === "orders" && (
+        <>
+          {activeTab === "orders" && (
           <div>
             <h2 className="text-xl font-bold mb-4">📋 Управление Заказами</h2>
             

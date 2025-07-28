@@ -475,6 +475,32 @@ const WaitressInterface = () => {
 
       await axios.post(`${API}/orders`, orderData);
       
+      // Send notifications to kitchen, bar, and admin about new order
+      const hasFood = allItems.some(item => item.item_type === 'food');
+      const hasDrinks = allItems.some(item => item.item_type === 'drink');
+      
+      if (hasFood) {
+        sendLocalNotification(
+          '🍽️ YomaBar - Новый заказ!',
+          `Стол ${selectedTable}: ${allItems.filter(item => item.item_type === 'food').length} блюд`,
+          'kitchen'
+        );
+      }
+      
+      if (hasDrinks) {
+        sendLocalNotification(
+          '🍻 YomaBar - Новый заказ!',
+          `Стол ${selectedTable}: ${allItems.filter(item => item.item_type === 'drink').length} напитков`,
+          'bar'
+        );
+      }
+      
+      sendLocalNotification(
+        '📋 YomaBar - Новый заказ!',
+        `Стол ${selectedTable}: ${allItems.length} позиций на $${calculateGrandTotal().toFixed(2)}`,
+        'admin'
+      );
+      
       setCompletionPhrase(getRandomPhrase(COMPLETION_PHRASES));
       setClients([]);
       setActiveClient(null);

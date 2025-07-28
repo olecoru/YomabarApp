@@ -1422,8 +1422,8 @@ const AdminInterface = () => {
                           <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
                             <div className="text-xs sm:text-sm text-gray-900">{order.customer_name}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900">
+                          <td className="px-2 sm:px-6 py-4">
+                            <div className="text-xs sm:text-sm text-gray-900">
                               {(order.items || []).map((item, index) => (
                                 <div key={index} className="flex justify-between">
                                   <span>{item.menu_item_name || item.name}</span>
@@ -1432,15 +1432,15 @@ const AdminInterface = () => {
                               ))}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">${(order.total || 0).toFixed(2)}</div>
+                          <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
+                            <div className="text-xs sm:text-sm font-medium text-gray-900">${(order.total || 0).toFixed(2)}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-2 sm:px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(order.status)}`}>
                               {getStatusText(order.status)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
                             <select
                               value={order.status}
                               onChange={(e) => updateOrderStatus(order.id, e.target.value)}

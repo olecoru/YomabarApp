@@ -1891,6 +1891,69 @@ const AdminInterface = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">🍽️ Управление Меню</h2>
             
+            {/* Статистика меню */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{menuStats.total_items}</div>
+                <div className="text-sm text-gray-600">Всего позиций</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{menuStats.available_items}</div>
+                <div className="text-sm text-gray-600">Доступно</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">{menuStats.hidden_items}</div>
+                <div className="text-sm text-gray-600">В стоп-листе</div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-gray-600">{menuStats.by_category?.length || 0}</div>
+                <div className="text-sm text-gray-600">Категорий</div>
+              </div>
+            </div>
+
+            {/* Импорт XLSX */}
+            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+              <h3 className="text-lg font-semibold mb-4">📊 Импорт Меню из XLSX</h3>
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  onChange={(e) => setImportFile(e.target.files[0])}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
+                />
+                <button
+                  onClick={handleMenuImport}
+                  disabled={loading || !importFile}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:bg-gray-400"
+                >
+                  {loading ? "Импорт..." : "Импортировать"}
+                </button>
+              </div>
+              {importResult && (
+                <div className={`mt-4 p-3 rounded-md ${importResult.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  <p><strong>Результат импорта:</strong></p>
+                  <p>Всего строк: {importResult.total_items}</p>
+                  <p>Создано: {importResult.created_items}</p>
+                  <p>Обновлено: {importResult.updated_items}</p>
+                  {importResult.errors.length > 0 && (
+                    <div className="mt-2">
+                      <p><strong>Ошибки:</strong></p>
+                      <ul className="list-disc list-inside">
+                        {importResult.errors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="mt-3 text-sm text-gray-600">
+                <p><strong>Формат файла:</strong> XLSX с колонками: name, description, price, category_id, item_type</p>
+                <p><strong>item_type:</strong> должен быть "food" или "drink"</p>
+                <p><strong>category_id:</strong> используйте ID категорий из списка выше</p>
+              </div>
+            </div>
+            
             <div className="bg-white p-6 rounded-lg shadow-md mb-6">
               <h3 className="text-lg font-semibold mb-4">Добавить Новое Блюдо</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

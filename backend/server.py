@@ -163,6 +163,8 @@ class MenuItemCreate(BaseModel):
     price: float
     category_id: str
     item_type: ItemType
+    bottle_available: bool = False
+    bottle_price: Optional[float] = None
 
 class MenuItemUpdate(BaseModel):
     name: Optional[str] = None

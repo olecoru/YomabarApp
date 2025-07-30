@@ -823,17 +823,38 @@ const WaitressInterface = () => {
                           <span className={`text-xs ${item.available ? 'text-gray-500' : 'text-gray-400'}`}>
                             {item.category_emoji} {item.category_display_name}
                           </span>
-                          <button
-                            onClick={() => addToOrder(item)}
-                            disabled={!activeClient || !item.available}
-                            className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                              item.available && activeClient
-                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
-                          >
-                            {item.available ? 'Добавить' : 'Недоступно'}
-                          </button>
+                          
+                          {/* Кнопки для добавления */}
+                          <div className="flex gap-2">
+                            {/* Обычная кнопка добавить */}
+                            <button
+                              onClick={() => addToOrder(item)}
+                              disabled={!activeClient || !item.available}
+                              className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                                item.available && activeClient
+                                  ? 'bg-red-600 text-white hover:bg-red-700'
+                                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              }`}
+                            >
+                              {item.available ? 'Добавить' : 'Недоступно'}
+                            </button>
+                            
+                            {/* Кнопка для бутылки (только для напитков с bottle_available) */}
+                            {item.item_type === 'drink' && item.bottle_available && item.bottle_price && (
+                              <button
+                                onClick={() => addToOrder(item, true)} // true = bottle
+                                disabled={!activeClient || !item.available}
+                                className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                                  item.available && activeClient
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                                title={`Бутылка: $${item.bottle_price.toFixed(2)}`}
+                              >
+                                🍾 Бутылка
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

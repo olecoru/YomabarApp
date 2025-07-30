@@ -150,6 +150,9 @@ class MenuItem(BaseModel):
     item_type: ItemType
     available: bool = True
     on_stop_list: bool = False
+    # Bottle options (only for drinks)
+    bottle_available: bool = False
+    bottle_price: Optional[float] = None
     image_url: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

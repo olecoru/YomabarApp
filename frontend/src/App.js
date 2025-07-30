@@ -2041,6 +2041,26 @@ const AdminInterface = () => {
                         {item.item_type === 'food' ? 'Еда' : 'Напиток'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => toggleMenuItemAvailability(item.id, item.available)}
+                            disabled={loading}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
+                              item.available ? 'bg-green-600' : 'bg-red-600'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                item.available ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className={`ml-2 text-sm ${item.available ? 'text-green-600' : 'text-red-600'}`}>
+                            {item.available ? 'Доступно' : 'В стоп-листе'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap space-x-2">
                         <button
                           onClick={() => deleteMenuItem(item.id, item.name)}
                           disabled={loading}

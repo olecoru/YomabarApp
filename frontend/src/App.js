@@ -1332,6 +1332,73 @@ const AdminInterface = () => {
     }
   };
 
+  // Получение статистики меню
+  const fetchMenuStats = async () => {
+    try {
+      const response = await axios.get(`${API}/menu/stats`);
+      setMenuStats(response.data);
+    } catch (error) {
+      console.error("Ошибка загрузки статистики меню:", error);
+    }
+  };
+
+  // Импорт меню из XLSX файла
+  const handleMenuImport = async () => {
+    if (!importFile) {
+      alert("Выберите файл для импорта");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', importFile);
+
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API}/menu/import`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setImportResult(response.data);
+      setImportFile(null);
+      // Обновляем меню и статистику после импорта
+      await fetchMenu();
+      await fetchMenuStats();
+      
+      if (response.data.success) {
+        alert(`Импорт завершен! Создано: ${response.data.created_items}, Обновлено: ${response.data.updated_items}`);
+      } else {
+        alert(`Импорт завершен с ошибками: ${response.data.errors.join(', ')}`);
+      }
+    } catch (error) {
+      console.error("Ошибка импорта:", error);
+      alert("Ошибка при импорте файла: " + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Переключение доступности позиции меню
+  const toggleMenuItemAvailability = async (itemId, currentAvailability) => {
+    try {
+      setLoading(true);
+      await axios.patch(`${API}/menu/${itemId}/availability`, {
+        item_id: itemId,
+        available: !currentAvailability
+      });
+      
+      // Обновляем меню и статистику
+      await fetchMenu();
+      await fetchMenuStats();
+    } catch (error) {
+      console.error("Ошибка переключения доступности:", error);
+      alert("Ошибка при изменении доступности позиции: " + (error.response?.data?.detail || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Обновление фильтров заказов
   const updateOrderFilters = (newFilters) => {
     const updatedFilters = { ...orderFilters, ...newFilters };

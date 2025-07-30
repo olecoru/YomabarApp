@@ -189,6 +189,8 @@ class MenuItemWithCategory(BaseModel):
     item_type: ItemType
     available: bool
     on_stop_list: bool
+    bottle_available: bool
+    bottle_price: Optional[float] = None
     image_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime

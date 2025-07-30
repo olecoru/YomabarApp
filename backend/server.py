@@ -1129,6 +1129,27 @@ async def import_menu_from_xlsx(
                     errors.append(f"Row {index + 2}: item_type must be 'food' or 'drink'")
                     continue
                 
+                # Handle bottle options (only valid for drinks)
+                bottle_available = False
+                bottle_price = None
+                
+                if item_type == 'drink':
+                    # Check for bottle_available column
+                    if 'bottle_available' in df.columns and pd.notna(row['bottle_available']):
+                        bottle_available_str = str(row['bottle_available']).strip().lower()
+                        bottle_available = bottle_available_str in ['true', '1', 'yes', 'да']
+                    
+                    # Check for bottle_price column (only if bottle_available is True)
+                    if bottle_available and 'bottle_price' in df.columns and pd.notna(row['bottle_price']):
+                        try:
+                            bottle_price = float(row['bottle_price'])
+                            if bottle_price <= 0:
+                                errors.append(f"Row {index + 2}: bottle_price must be positive")
+                                continue
+                        except (ValueError, TypeError):
+                            errors.append(f"Row {index + 2}: Invalid bottle_price format")
+                            continue
+                
                 # Check for existing item by name (case-insensitive)
                 existing_item = await db.menu_items.find_one({"name": {"$regex": f"^{name}$", "$options": "i"}})
                 

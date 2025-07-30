@@ -1279,6 +1279,7 @@ const AdminInterface = () => {
     fetchCategories();
     fetchMenu();
     fetchUsers();
+    fetchMenuStats();
     
     // Автообновление заказов каждые 30 секунд
     const interval = setInterval(fetchOrders, 30000);

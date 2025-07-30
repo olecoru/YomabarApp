@@ -11,7 +11,7 @@ import io
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://7ac04967-575d-4814-81b1-48f03205e31d.preview.emergentagent.com/api"
+BACKEND_URL = "http://localhost:8001/api"
 
 class XLSXMenuTester:
     def __init__(self):

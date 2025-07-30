@@ -300,17 +300,22 @@ const WaitressInterface = () => {
     return clients.find(client => client.id === activeClient);
   };
 
-  const addToOrder = (menuItem) => {
+  const addToOrder = (menuItem, isBottle = false) => {
     if (!activeClient) return;
+    
+    // Создаем уникальный ID для бутылочных позиций
+    const itemId = isBottle ? `${menuItem.id}_bottle` : menuItem.id;
+    const itemName = isBottle ? `Бутылка ${menuItem.name}` : menuItem.name;
+    const itemPrice = isBottle ? menuItem.bottle_price : menuItem.price;
     
     setClients(clients.map(client => {
       if (client.id === activeClient) {
-        const existingItem = client.order.find(item => item.id === menuItem.id);
+        const existingItem = client.order.find(item => item.id === itemId);
         if (existingItem) {
           return {
             ...client,
             order: client.order.map(item => 
-              item.id === menuItem.id 
+              item.id === itemId 
                 ? { ...item, quantity: item.quantity + 1 }
                 : item
             )
@@ -318,7 +323,14 @@ const WaitressInterface = () => {
         } else {
           return {
             ...client,
-            order: [...client.order, { ...menuItem, quantity: 1 }]
+            order: [...client.order, { 
+              ...menuItem,
+              id: itemId,
+              name: itemName, 
+              price: itemPrice,
+              quantity: 1,
+              is_bottle: isBottle
+            }]
           };
         }
       }

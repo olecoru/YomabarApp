@@ -1488,21 +1488,35 @@ const AdminInterface = () => {
   };
 
   const addMenuItem = async () => {
-    if (!newMenuItem.name || !newMenuItem.description || !newMenuItem.price || !newMenuItem.category_id) {
-      alert("Пожалуйста, заполните все обязательные поля");
+    if (!newMenuItem.name || !newMenuItem.price || !newMenuItem.category_id) {
+      alert("Заполните все обязательные поля");
       return;
     }
-    
-    setLoading(true);
+
     try {
-      await axios.post(`${API}/menu`, {
-        ...newMenuItem,
-        price: parseFloat(newMenuItem.price)
+      setLoading(true);
+      const menuItemData = { ...newMenuItem };
+      
+      // Для напитков проверяем бутылочные опции
+      if (newMenuItem.item_type === 'drink') {
+        menuItemData.bottle_available = newMenuItem.bottle_available || false;
+        menuItemData.bottle_price = newMenuItem.bottle_available ? parseFloat(newMenuItem.bottle_price) || null : null;
+      } else {
+        // Для еды убираем бутылочные опции
+        menuItemData.bottle_available = false;
+        menuItemData.bottle_price = null;
+      }
+      
+      await axios.post(`${API}/menu`, menuItemData);
+      await fetchMenu();
+      await fetchMenuStats();
+      setNewMenuItem({
+        name: "", description: "", price: "", category_id: "", item_type: "food", bottle_available: false, bottle_price: ""
       });
-      setNewMenuItem({ name: "", description: "", price: "", category_id: "", item_type: "food" });
-      fetchMenu();
+      alert("Блюдо успешно добавлено!");
     } catch (error) {
-      alert("Ошибка: " + (error.response?.data?.detail || "Не удалось добавить блюдо"));
+      console.error("Ошибка добавления блюда:", error);
+      alert("Ошибка при добавлении блюда: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
     }

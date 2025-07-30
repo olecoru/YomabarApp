@@ -1037,6 +1037,180 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         "ready_orders": ready_orders
     }
 
+# XLSX Import Models
+class ImportResult(BaseModel):
+    success: bool
+    total_items: int
+    created_items: int
+    updated_items: int
+    errors: List[str]
+
+class MenuItemAvailabilityToggle(BaseModel):
+    item_id: str
+    available: bool
+
+# XLSX Menu Import endpoint
+@api_router.post("/menu/import", response_model=ImportResult)
+async def import_menu_from_xlsx(
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))
+):
+    """Import menu items from XLSX file (admin only)"""
+    if not file.filename.endswith('.xlsx'):
+        raise HTTPException(status_code=400, detail="Only XLSX files are supported")
+    
+    try:
+        # Read the uploaded file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Expected columns
+        required_columns = ['name', 'description', 'price', 'category_id', 'item_type']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Missing required columns: {', '.join(missing_columns)}"
+            )
+        
+        # Get all categories for validation
+        categories = await db.categories.find({}, {"_id": 0}).to_list(1000)
+        category_ids = {cat['id'] for cat in categories}
+        
+        created_items = 0
+        updated_items = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # Validate required fields
+                name = str(row['name']).strip()
+                if not name or name == 'nan':
+                    errors.append(f"Row {index + 2}: Name is required")
+                    continue
+                
+                description = str(row['description']).strip() if pd.notna(row['description']) else ""
+                
+                try:
+                    price = float(row['price'])
+                    if price <= 0:
+                        errors.append(f"Row {index + 2}: Price must be positive")
+                        continue
+                except (ValueError, TypeError):
+                    errors.append(f"Row {index + 2}: Invalid price format")
+                    continue
+                
+                category_id = str(row['category_id']).strip()
+                if category_id not in category_ids:
+                    errors.append(f"Row {index + 2}: Category '{category_id}' not found")
+                    continue
+                
+                item_type = str(row['item_type']).strip().lower()
+                if item_type not in ['food', 'drink']:
+                    errors.append(f"Row {index + 2}: item_type must be 'food' or 'drink'")
+                    continue
+                
+                # Check for existing item by name (case-insensitive)
+                existing_item = await db.menu_items.find_one({"name": {"$regex": f"^{name}$", "$options": "i"}})
+                
+                menu_item_data = {
+                    "name": name,
+                    "description": description,
+                    "price": price,
+                    "category_id": category_id,
+                    "item_type": item_type,
+                    "available": True,  # Default to available
+                    "on_stop_list": False,  # Default to not on stop list
+                    "updated_at": datetime.utcnow()
+                }
+                
+                if existing_item:
+                    # Update existing item
+                    await db.menu_items.update_one(
+                        {"id": existing_item["id"]},
+                        {"$set": menu_item_data}
+                    )
+                    updated_items += 1
+                else:
+                    # Create new item
+                    menu_item_data.update({
+                        "id": str(uuid.uuid4()),
+                        "created_at": datetime.utcnow()
+                    })
+                    await db.menu_items.insert_one(menu_item_data)
+                    created_items += 1
+                    
+            except Exception as e:
+                errors.append(f"Row {index + 2}: {str(e)}")
+        
+        return ImportResult(
+            success=len(errors) == 0,
+            total_items=len(df),
+            created_items=created_items,
+            updated_items=updated_items,
+            errors=errors
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing file: {str(e)}")
+
+# Menu item availability toggle endpoint
+@api_router.patch("/menu/{item_id}/availability")
+async def toggle_menu_item_availability(
+    item_id: str,
+    availability: MenuItemAvailabilityToggle,
+    current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))
+):
+    """Toggle menu item availability (admin only)"""
+    existing_item = await db.menu_items.find_one({"id": item_id})
+    if not existing_item:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+    
+    await db.menu_items.update_one(
+        {"id": item_id},
+        {"$set": {"available": availability.available, "updated_at": datetime.utcnow()}}
+    )
+    
+    return {"success": True, "message": f"Item availability updated to {availability.available}"}
+
+# Get menu stats (including hidden items count)
+@api_router.get("/menu/stats")
+async def get_menu_stats(current_user: User = Depends(require_role([UserRole.ADMINISTRATOR]))):
+    """Get menu statistics (admin only)"""
+    total_items = await db.menu_items.count_documents({})
+    available_items = await db.menu_items.count_documents({"available": True})
+    hidden_items = await db.menu_items.count_documents({"available": False})
+    
+    # Group by category
+    pipeline = [
+        {"$group": {"_id": "$category_id", "count": {"$sum": 1}}},
+        {
+            "$lookup": {
+                "from": "categories",
+                "localField": "_id", 
+                "foreignField": "id",
+                "as": "category"
+            }
+        },
+        {"$unwind": "$category"},
+        {
+            "$project": {
+                "category_name": "$category.display_name",
+                "count": 1
+            }
+        }
+    ]
+    
+    category_counts = await db.menu_items.aggregate(pipeline).to_list(1000)
+    
+    return {
+        "total_items": total_items,
+        "available_items": available_items,
+        "hidden_items": hidden_items,
+        "by_category": category_counts
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 

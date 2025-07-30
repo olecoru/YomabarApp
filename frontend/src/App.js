@@ -2085,7 +2085,12 @@ const AdminInterface = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${item.price.toFixed(2)}
+                        <div>${item.price.toFixed(2)}</div>
+                        {item.item_type === 'drink' && item.bottle_available && item.bottle_price && (
+                          <div className="text-xs text-blue-600">
+                            🍾 Бутылка: ${item.bottle_price.toFixed(2)}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.item_type === 'food' ? 'Еда' : 'Напиток'}

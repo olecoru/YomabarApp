@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Enhanced Restaurant Management System Backend API Testing
-Tests new features: Dynamic Categories, Enhanced User Management, Enhanced Menu System, Enhanced Dashboard
+Tests new features: Dynamic Categories, Enhanced User Management, Enhanced Menu System, Enhanced Dashboard, XLSX Menu Import
 """
 
 import requests
@@ -9,6 +9,8 @@ import json
 import sys
 from datetime import datetime
 import uuid
+import pandas as pd
+import io
 
 # Backend URL from frontend/.env
 BACKEND_URL = "https://7ac04967-575d-4814-81b1-48f03205e31d.preview.emergentagent.com/api"

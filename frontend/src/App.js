@@ -1275,7 +1275,7 @@ const AdminInterface = () => {
 
   // Новое блюдо
   const [newMenuItem, setNewMenuItem] = useState({
-    name: "", description: "", price: "", category_id: "", item_type: "food"
+    name: "", description: "", price: "", category_id: "", item_type: "food", bottle_available: false, bottle_price: ""
   });
 
   // Новый пользователь

@@ -2020,6 +2020,35 @@ const AdminInterface = () => {
                   <option value="food">Еда</option>
                   <option value="drink">Напиток</option>
                 </select>
+                
+                {/* Поля для бутылочных опций (только для напитков) */}
+                {newMenuItem.item_type === 'drink' && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="bottle_available"
+                        checked={newMenuItem.bottle_available || false}
+                        onChange={(e) => setNewMenuItem({...newMenuItem, bottle_available: e.target.checked})}
+                        className="rounded focus:ring-2 focus:ring-red-500"
+                      />
+                      <label htmlFor="bottle_available" className="text-sm text-gray-700">
+                        Можно купить бутылкой
+                      </label>
+                    </div>
+                    {newMenuItem.bottle_available && (
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="Цена за бутылку"
+                        value={newMenuItem.bottle_price || ''}
+                        onChange={(e) => setNewMenuItem({...newMenuItem, bottle_price: e.target.value})}
+                        className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      />
+                    )}
+                  </>
+                )}
+                
                 <button
                   onClick={addMenuItem}
                   disabled={loading}

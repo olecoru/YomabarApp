@@ -798,22 +798,41 @@ const WaitressInterface = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredMenu.map(item => (
-                      <div key={item.id} className="bg-gray-50 p-4 rounded-lg">
+                      <div key={item.id} className={`p-4 rounded-lg relative ${
+                        item.available ? 'bg-gray-50' : 'bg-red-50 border border-red-200'
+                      }`}>
+                        {!item.available && (
+                          <div className="absolute top-2 right-2">
+                            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                              Недоступно
+                            </span>
+                          </div>
+                        )}
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                          <span className="text-red-600 font-bold">${item.price.toFixed(2)}</span>
+                          <h3 className={`font-semibold ${item.available ? 'text-gray-900' : 'text-gray-500'}`}>
+                            {item.name}
+                          </h3>
+                          <span className={`font-bold ${item.available ? 'text-red-600' : 'text-gray-400'}`}>
+                            ${item.price.toFixed(2)}
+                          </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-3">{item.description}</p>
+                        <p className={`text-sm mb-3 ${item.available ? 'text-gray-600' : 'text-gray-400'}`}>
+                          {item.description}
+                        </p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">
+                          <span className={`text-xs ${item.available ? 'text-gray-500' : 'text-gray-400'}`}>
                             {item.category_emoji} {item.category_display_name}
                           </span>
                           <button
                             onClick={() => addToOrder(item)}
-                            disabled={!activeClient}
-                            className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!activeClient || !item.available}
+                            className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                              item.available && activeClient
+                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
                           >
-                            Добавить
+                            {item.available ? 'Добавить' : 'Недоступно'}
                           </button>
                         </div>
                       </div>

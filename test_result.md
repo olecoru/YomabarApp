@@ -479,13 +479,17 @@ metadata:
   test_sequence: 0
   run_ui: false
 
-test_plan:
-  current_focus:
-    - "Automatic Client 1 Creation System"
-    - "Order Creation System"
-  stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  - task: "XLSX Menu Import and Availability Toggle System"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "IMPLEMENTING: User requests XLSX menu import functionality and availability toggle (stop-list) for menu items. Requirements: 1) Import all menu item fields from xlsx, replace duplicates by name, include validation. 2) Add is_available field to show unavailable items as 'недоступно' to waitresses but keep in existing orders. 3) Admin interface to show count of hidden items and toggle visibility."
 
 agent_communication:
   - agent: "main"

@@ -540,9 +540,10 @@ async def delete_user(user_id: str, current_user: User = Depends(require_role([U
 # Menu endpoints
 @api_router.get("/menu", response_model=List[MenuItemWithCategory])
 async def get_menu(current_user: User = Depends(get_current_user)):
-    """Get all available menu items with category information"""
+    """Get all menu items with category information (shows unavailable items to waitresses)"""
+    # For waitresses, show all items but mark unavailable ones
+    # For other roles, show all items
     pipeline = [
-        {"$match": {"available": True, "on_stop_list": False}},
         {"$lookup": {
             "from": "categories",
             "localField": "category_id",

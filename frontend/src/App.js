@@ -1967,8 +1967,10 @@ const AdminInterface = () => {
                 </div>
               )}
               <div className="mt-3 text-sm text-gray-600">
-                <p><strong>Формат файла:</strong> XLSX с колонками: name, description, price, category_id, item_type</p>
+                <p><strong>Формат файла:</strong> XLSX с колонками: name, description, price, category_id, item_type, bottle_available, bottle_price</p>
                 <p><strong>item_type:</strong> должен быть "food" или "drink"</p>
+                <p><strong>bottle_available:</strong> для напитков - true/false (можно ли купить бутылкой)</p>
+                <p><strong>bottle_price:</strong> цена за бутылку (только если bottle_available=true)</p>
                 <p><strong>category_id:</strong> используйте ID категорий из списка выше</p>
               </div>
             </div>

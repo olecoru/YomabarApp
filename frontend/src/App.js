@@ -1264,6 +1264,16 @@ const AdminInterface = () => {
     username: "", password: "", full_name: "", role: "waitress"
   });
 
+  // XLSX импорт и статистика меню
+  const [importFile, setImportFile] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const [menuStats, setMenuStats] = useState({
+    total_items: 0,
+    available_items: 0,
+    hidden_items: 0,
+    by_category: []
+  });
+
   useEffect(() => {
     fetchOrders();
     fetchCategories();

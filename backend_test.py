@@ -2154,6 +2154,9 @@ class EnhancedRestaurantTester:
         print("🎯 RUNNING PRIORITY TESTS FOR CURRENT FOCUS TASKS")
         print("="*80)
         
+        # NEW PRIORITY TEST: XLSX Menu Import and Availability Toggle System
+        self.test_xlsx_menu_import_and_availability_toggle()
+        
         self.test_menu_management_api_endpoints()
         self.test_department_based_order_filtering()
         self.test_enhanced_categories_with_department_support()

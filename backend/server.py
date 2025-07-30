@@ -174,6 +174,8 @@ class MenuItemUpdate(BaseModel):
     item_type: Optional[ItemType] = None
     available: Optional[bool] = None
     on_stop_list: Optional[bool] = None
+    bottle_available: Optional[bool] = None
+    bottle_price: Optional[float] = None
 
 class MenuItemWithCategory(BaseModel):
     id: str

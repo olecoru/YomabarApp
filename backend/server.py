@@ -1161,6 +1161,8 @@ async def import_menu_from_xlsx(
                     "item_type": item_type,
                     "available": True,  # Default to available
                     "on_stop_list": False,  # Default to not on stop list
+                    "bottle_available": bottle_available,
+                    "bottle_price": bottle_price,
                     "updated_at": datetime.utcnow()
                 }
                 

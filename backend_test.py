@@ -2189,7 +2189,7 @@ class EnhancedRestaurantTester:
         print(f"📊 TOTAL: {len(self.test_results)}")
         
         # Separate priority test results
-        priority_keywords = ["PRIORITY", "Menu Management API", "Department-Based Order", "Enhanced Categories with Department", "Multi-Client Order"]
+        priority_keywords = ["PRIORITY", "Menu Management API", "Department-Based Order", "Enhanced Categories with Department", "Multi-Client Order", "XLSX Menu Import", "menu/import", "availability"]
         priority_tests = [test for test in self.test_results if any(keyword in test['test'] for keyword in priority_keywords)]
         priority_passed = [test for test in priority_tests if test['success']]
         priority_failed = [test for test in priority_tests if not test['success']]

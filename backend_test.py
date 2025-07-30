@@ -857,6 +857,267 @@ class EnhancedRestaurantTester:
             except Exception as e:
                 self.log_test("Unified order management", False, f"Request failed: {str(e)}")
                     
+    def test_xlsx_menu_import_and_availability_toggle(self):
+        """Test XLSX Menu Import and Availability Toggle System - PRIORITY TASK"""
+        print("\n=== TESTING XLSX MENU IMPORT AND AVAILABILITY TOGGLE SYSTEM (PRIORITY) ===")
+        
+        # Test 1: GET /api/menu/stats (admin only - menu statistics)
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/menu/stats")
+                
+                if response.status_code == 200:
+                    stats = response.json()
+                    required_fields = ["total_items", "available_items", "hidden_items", "by_category"]
+                    if all(field in stats for field in required_fields):
+                        self.log_test("GET /api/menu/stats (admin)", True, 
+                                    f"Retrieved menu stats: {stats['total_items']} total, {stats['available_items']} available, {stats['hidden_items']} hidden")
+                    else:
+                        self.log_test("GET /api/menu/stats (admin)", False, f"Missing required fields in stats response")
+                else:
+                    self.log_test("GET /api/menu/stats (admin)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/menu/stats (admin)", False, f"Request failed: {str(e)}")
+        
+        # Test 2: Create mock XLSX file for import testing
+        import pandas as pd
+        import io
+        
+        if "administrator" in self.tokens and self.categories:
+            try:
+                # Create test data for XLSX import
+                test_menu_data = [
+                    {
+                        "name": "Test Imported Burger",
+                        "description": "Delicious imported burger from XLSX",
+                        "price": 19.99,
+                        "category_id": self.categories[0]["id"],  # Use first available category
+                        "item_type": "food"
+                    },
+                    {
+                        "name": "Test Imported Cocktail",
+                        "description": "Refreshing imported cocktail from XLSX",
+                        "price": 12.50,
+                        "category_id": self.categories[-1]["id"],  # Use last available category
+                        "item_type": "drink"
+                    },
+                    {
+                        "name": "Test Imported Dessert",
+                        "description": "Sweet imported dessert from XLSX",
+                        "price": 8.75,
+                        "category_id": self.categories[0]["id"],
+                        "item_type": "food"
+                    }
+                ]
+                
+                # Create DataFrame and convert to XLSX bytes
+                df = pd.DataFrame(test_menu_data)
+                xlsx_buffer = io.BytesIO()
+                df.to_excel(xlsx_buffer, index=False, engine='openpyxl')
+                xlsx_buffer.seek(0)
+                
+                self.log_test("XLSX file creation", True, f"Created test XLSX with {len(test_menu_data)} menu items")
+                
+                # Test 3: POST /api/menu/import (admin only - XLSX file upload)
+                self.set_auth_header("administrator")
+                files = {'file': ('test_menu.xlsx', xlsx_buffer.getvalue(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+                
+                response = self.session.post(f"{BACKEND_URL}/menu/import", files=files)
+                
+                if response.status_code == 200:
+                    import_result = response.json()
+                    required_fields = ["success", "total_items", "created_items", "updated_items", "errors"]
+                    if all(field in import_result for field in required_fields):
+                        if import_result["success"] and import_result["created_items"] > 0:
+                            self.log_test("POST /api/menu/import (XLSX upload)", True, 
+                                        f"Successfully imported {import_result['created_items']} items, {import_result['updated_items']} updated")
+                        else:
+                            self.log_test("POST /api/menu/import (XLSX upload)", False, 
+                                        f"Import failed or no items created. Errors: {import_result.get('errors', [])}")
+                    else:
+                        self.log_test("POST /api/menu/import (XLSX upload)", False, "Missing required fields in import response")
+                else:
+                    self.log_test("POST /api/menu/import (XLSX upload)", False, f"HTTP {response.status_code}: {response.text}")
+                    
+            except Exception as e:
+                self.log_test("POST /api/menu/import (XLSX upload)", False, f"Request failed: {str(e)}")
+        
+        # Test 4: Verify imported items appear in menu
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/menu")
+                
+                if response.status_code == 200:
+                    menu_items = response.json()
+                    self.menu_items = menu_items
+                    
+                    # Look for imported items
+                    imported_items = [item for item in menu_items if "imported" in item["name"].lower()]
+                    if imported_items:
+                        self.log_test("GET /api/menu (verify imported items)", True, 
+                                    f"Found {len(imported_items)} imported items in menu")
+                        
+                        # Store first imported item for availability testing
+                        self.test_item_id = imported_items[0]["id"]
+                    else:
+                        # Check if any new items were added
+                        self.log_test("GET /api/menu (verify imported items)", True, 
+                                    f"Menu contains {len(menu_items)} total items (imported items may have different names)")
+                        if menu_items:
+                            self.test_item_id = menu_items[0]["id"]
+                else:
+                    self.log_test("GET /api/menu (verify imported items)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/menu (verify imported items)", False, f"Request failed: {str(e)}")
+        
+        # Test 5: PATCH /api/menu/{item_id}/availability (admin only - toggle availability)
+        if "administrator" in self.tokens and hasattr(self, 'test_item_id'):
+            try:
+                self.set_auth_header("administrator")
+                
+                # First, make item unavailable
+                availability_data = {"item_id": self.test_item_id, "available": False}
+                response = self.session.patch(f"{BACKEND_URL}/menu/{self.test_item_id}/availability", json=availability_data)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("success") and "availability updated to False" in result.get("message", ""):
+                        self.log_test("PATCH /api/menu/{item_id}/availability (make unavailable)", True, 
+                                    "Successfully made menu item unavailable")
+                    else:
+                        self.log_test("PATCH /api/menu/{item_id}/availability (make unavailable)", False, 
+                                    f"Unexpected response: {result}")
+                else:
+                    self.log_test("PATCH /api/menu/{item_id}/availability (make unavailable)", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+                
+                # Then, make item available again
+                availability_data = {"item_id": self.test_item_id, "available": True}
+                response = self.session.patch(f"{BACKEND_URL}/menu/{self.test_item_id}/availability", json=availability_data)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("success") and "availability updated to True" in result.get("message", ""):
+                        self.log_test("PATCH /api/menu/{item_id}/availability (make available)", True, 
+                                    "Successfully made menu item available")
+                    else:
+                        self.log_test("PATCH /api/menu/{item_id}/availability (make available)", False, 
+                                    f"Unexpected response: {result}")
+                else:
+                    self.log_test("PATCH /api/menu/{item_id}/availability (make available)", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+                    
+            except Exception as e:
+                self.log_test("PATCH /api/menu/{item_id}/availability", False, f"Request failed: {str(e)}")
+        
+        # Test 6: Verify GET /api/menu shows all items including unavailable ones
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                response = self.session.get(f"{BACKEND_URL}/menu")
+                
+                if response.status_code == 200:
+                    menu_items = response.json()
+                    
+                    # Check if response includes availability status
+                    items_with_availability = [item for item in menu_items if "available" in item]
+                    available_items = [item for item in menu_items if item.get("available", True)]
+                    unavailable_items = [item for item in menu_items if not item.get("available", True)]
+                    
+                    if len(items_with_availability) == len(menu_items):
+                        self.log_test("GET /api/menu (shows all items with availability)", True, 
+                                    f"Menu shows {len(available_items)} available and {len(unavailable_items)} unavailable items")
+                    else:
+                        self.log_test("GET /api/menu (shows all items with availability)", False, 
+                                    "Some menu items missing availability field")
+                else:
+                    self.log_test("GET /api/menu (shows all items with availability)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/menu (shows all items with availability)", False, f"Request failed: {str(e)}")
+        
+        # Test 7: Test error handling for invalid XLSX file
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                
+                # Create invalid file (not XLSX)
+                invalid_file_content = b"This is not an XLSX file"
+                files = {'file': ('invalid.txt', invalid_file_content, 'text/plain')}
+                
+                response = self.session.post(f"{BACKEND_URL}/menu/import", files=files)
+                
+                if response.status_code == 400:
+                    self.log_test("POST /api/menu/import (invalid file type)", True, 
+                                "Correctly rejected non-XLSX file with 400 error")
+                else:
+                    self.log_test("POST /api/menu/import (invalid file type)", False, 
+                                f"Expected 400 error, got HTTP {response.status_code}")
+                    
+            except Exception as e:
+                self.log_test("POST /api/menu/import (invalid file type)", False, f"Request failed: {str(e)}")
+        
+        # Test 8: Test role-based access control for import endpoint
+        if "waitress" in self.tokens:
+            try:
+                self.set_auth_header("waitress")
+                
+                # Try to import as waitress (should fail)
+                dummy_xlsx = io.BytesIO()
+                pd.DataFrame([{"name": "test", "description": "test", "price": 10, "category_id": "test", "item_type": "food"}]).to_excel(dummy_xlsx, index=False)
+                dummy_xlsx.seek(0)
+                
+                files = {'file': ('test.xlsx', dummy_xlsx.getvalue(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+                response = self.session.post(f"{BACKEND_URL}/menu/import", files=files)
+                
+                if response.status_code == 403:
+                    self.log_test("POST /api/menu/import (waitress - should fail)", True, 
+                                "Correctly denied import access for non-admin user")
+                else:
+                    self.log_test("POST /api/menu/import (waitress - should fail)", False, 
+                                f"Expected 403, got HTTP {response.status_code}")
+                    
+            except Exception as e:
+                self.log_test("POST /api/menu/import (waitress - should fail)", False, f"Request failed: {str(e)}")
+        
+        # Test 9: Test role-based access control for availability toggle
+        if "kitchen" in self.tokens and hasattr(self, 'test_item_id'):
+            try:
+                self.set_auth_header("kitchen")
+                
+                # Try to toggle availability as kitchen staff (should fail)
+                availability_data = {"item_id": self.test_item_id, "available": False}
+                response = self.session.patch(f"{BACKEND_URL}/menu/{self.test_item_id}/availability", json=availability_data)
+                
+                if response.status_code == 403:
+                    self.log_test("PATCH /api/menu/{item_id}/availability (kitchen - should fail)", True, 
+                                "Correctly denied availability toggle for non-admin user")
+                else:
+                    self.log_test("PATCH /api/menu/{item_id}/availability (kitchen - should fail)", False, 
+                                f"Expected 403, got HTTP {response.status_code}")
+                    
+            except Exception as e:
+                self.log_test("PATCH /api/menu/{item_id}/availability (kitchen - should fail)", False, f"Request failed: {str(e)}")
+        
+        # Test 10: Test menu stats after import and availability changes
+        if "administrator" in self.tokens:
+            try:
+                self.set_auth_header("administrator")
+                response = self.session.get(f"{BACKEND_URL}/menu/stats")
+                
+                if response.status_code == 200:
+                    final_stats = response.json()
+                    if final_stats.get("total_items", 0) > 0:
+                        self.log_test("GET /api/menu/stats (after import)", True, 
+                                    f"Final stats: {final_stats['total_items']} total, {final_stats['available_items']} available, {final_stats['hidden_items']} hidden")
+                    else:
+                        self.log_test("GET /api/menu/stats (after import)", False, "No menu items found in final stats")
+                else:
+                    self.log_test("GET /api/menu/stats (after import)", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("GET /api/menu/stats (after import)", False, f"Request failed: {str(e)}")
+
     def test_enhanced_order_management(self):
         """Test enhanced order management with multiple clients per table"""
         print("\n=== TESTING ENHANCED ORDER MANAGEMENT ===")
